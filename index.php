@@ -1,6 +1,6 @@
 <?
 function rep1($match) {
-	return $match[2] == $_GET['l'] . ':' ? $match[0] : '';
+	return $match[2] == $_GET['lang'] . ':' ? $match[0] : '';
 }
 
 function rep2($match) {
@@ -82,7 +82,7 @@ $empty = 'Double-click to edit';
 $rss = new DOMDocument;
 $rss->load('catalog.xml');
 $nss = array('' => $rss->lookupNamespaceURI(null), 'axe' => $rss->lookupNamespaceURI('axe'), 'grammer' => $rss->lookupNamespaceURI('grammer'));
-$ns = $nss[$_GET['l']];
+$ns = $nss[$_GET['lang']];
 
 if ($_GET['alt']) {
 	$rss->formatOutput = $pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
@@ -108,7 +108,7 @@ if ($_GET['alt']) {
 	if ($pretty)
 		$rss = str_replace(array('  ', '/>'), array('	', ' />'), $rss);
 
-	if ($_GET['l'])
+	if ($_GET['lang'])
 		$rss = preg_replace_callback('#<(([-\w]+:)?(syntax|description)(-\w)*)(>.*?</\1| ?/)>#', 'rep1', $rss);
 	else
 		$rss = preg_replace('#<([-\w]+:[-\w]+)(>.*?</\1| ?/)>#', '', $rss);
@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 if (is_numeric($_GET['i'])) {
-	header('Location: /catalog/' . ($_GET['l'] ? $_GET['l'] . '/' : '') . '#t' . bin2hex(chr($_GET['i']) . (is_numeric($_GET['j']) ? chr($_GET['j']) : '')));
+	header('Location: /catalog/' . ($_GET['lang'] ? $_GET['lang'] . '/' : '') . '#t' . bin2hex(chr($_GET['i']) . (is_numeric($_GET['j']) ? chr($_GET['j']) : '')));
 	die();
 }
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -289,7 +289,7 @@ if (is_numeric($_GET['i'])) {
 			}
 			.values {
 				border-left: 0.1em solid #889;
-				background: #ddf;
+				background: #def;
 				color: #334;
 			}
 			.values, .values .values {
@@ -562,15 +562,15 @@ echo $empty;
 			</a>
 			<div>
 				<a href="/catalog/"<?
-if (!$_GET['l'])
+if (!$_GET['lang'])
 	echo ' class="active"';
 ?>>TI-BASIC</a>
 				<a href="/catalog/axe/"<?
-if ($_GET['l'] == 'axe')
+if ($_GET['lang'] == 'axe')
 	echo ' class="active"';
 ?>>Axe</a>
 				<a href="/catalog/grammer/"<?
-if ($_GET['l'] == 'grammer')
+if ($_GET['lang'] == 'grammer')
 	echo ' class="active"';
 ?>>Grammer</a>
 			</div>
@@ -591,7 +591,7 @@ echo u_parse($rss->firstChild, 't') . '
 				<img src="/images/emblem.png" alt="ClrHome" />
 			</a>
 			<div><?
-switch ($_GET['l']) {
+switch ($_GET['lang']) {
 	case '':
 		echo 'Guidebook used with permission from TI. <a href="http://education.ti.com/">http://education.ti.com/</a>';
 		break;

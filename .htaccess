@@ -1,6 +1,5 @@
 RewriteEngine on
 RewriteRule ^basic\/(.*)$ "/catalog/$1" [R=301,QSA,L]
 RewriteRule ^([a-z]+(\/\d+){0,2}|\d+(\/\d+)?)$ "/catalog/$1/" [R=301,QSA,L]
-RewriteRule ^([a-z]+)\/((\d+)\/((\d+)\/)?)?$ "/catalog/?l=$1&i=$3&j=$5" [QSA,L]
+RewriteRule ^([a-z]+)\/((\d+)\/((\d+)\/)?)?$ "/catalog/?lang=$1&i=$3&j=$5" [QSA,L]
 RewriteRule ^(\d+)\/((\d+)\/)?$ "/catalog/?i=$1&j=$3" [QSA,L]
-RewriteRule ^conf.xml$ "/catalog/catalog.xml" [R=301,L]
