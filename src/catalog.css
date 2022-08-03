@@ -1,0 +1,235 @@
+body {
+  margin: 0;
+  font: 16px Arial, Helvetica, sans-serif;
+  background: #123;
+}
+body *::-webkit-scrollbar {
+  width: 0.6em;
+}
+body *::-webkit-scrollbar:hover {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+body *::-webkit-scrollbar:active {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+}
+body *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0);
+}
+body *:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+}
+body *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+body *::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.9);
+}
+body > div {
+  padding: 2em 0;
+}
+body > div > div {
+  margin: 0 5%;
+}
+#top,
+#bottom {
+  box-shadow: 0 0 0.5em #000;
+  background: #012;
+  color: #678;
+}
+#top {
+  text-align: right;
+}
+input {
+  display: block;
+  width: 89%;
+  margin: auto;
+  margin-top: 1em;
+  border: 0.07em solid #455;
+  border-radius: 0.15em;
+  padding: 0.1em 0.2em;
+  background: #234;
+  color: #343;
+  outline: 0;
+  font-size: 1.4em;
+}
+input:focus {
+  background: #eee;
+}
+input.green:focus {
+  background: #9c9;
+}
+input.red:focus {
+  background: #c99;
+}
+.gallery {
+  overflow: auto;
+  border: 0.1em solid #455;
+  border-radius: 0.5em;
+  background: #566;
+}
+.gallery::-webkit-scrollbar,
+.gallery::-webkit-scrollbar-thumb {
+  border-radius: 0 0 0.5em 0.5em;
+}
+.gallery > div {
+  min-width: 48em;
+}
+.keys,
+.values,
+.values div {
+  height: 20em;
+}
+.keys {
+  width: 25%;
+  float: left;
+  overflow: auto;
+  background: #899;
+}
+.values .keys {
+  width: 33%;
+  background: #9aa;
+}
+.keys a {
+  display: block;
+  border-bottom: 0.1em solid #677;
+  padding: 0.5em 1em;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-decoration: none;
+  color: #223;
+  cursor: default;
+}
+.values .keys a {
+  border-color: #788;
+  color: #334;
+}
+.keys a:active,
+.keys a.active {
+  background: #112;
+  color: #bbd;
+}
+.values .keys a:active,
+.values .keys a.active {
+  background: #223;
+  color: #cce;
+}
+.keys .table:after {
+  float: right;
+  font-weight: normal;
+}
+.keys .table.active:after {
+  content: "\25B6";
+}
+.keys .table:after,
+.keys .table:active:after {
+  content: "\25B7";
+}
+.values {
+  border-left: 0.1em solid #889;
+  background: #def;
+  color: #334;
+}
+.values,
+.values .values {
+  overflow: hidden;
+}
+.values div {
+  overflow: auto;
+}
+.values dl {
+  margin: 1em;
+}
+.values dt {
+  margin: 1em 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.values dd {
+  margin: 1em 0;
+  padding: 0;
+}
+textarea {
+  width: 100%;
+  height: 4em;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background-color: transparent;
+  font: 1em Arial, Helvetica, sans-serif;
+}
+#top > a {
+  float: left;
+  margin-left: 5%;
+}
+#top > a img {
+  max-width: 100%;
+}
+#top div {
+  float: right;
+  margin-left: 0;
+}
+#top div a {
+  display: inline-block;
+  margin: 1em 1em 0 0;
+  border: 1px dotted #001;
+  border-radius: 0.3em;
+  padding: 0.5em 1em;
+  color: #9ab;
+  font-weight: bold;
+  text-decoration: none;
+}
+#top div a:hover {
+  border-style: solid;
+  background: #123;
+  color: #ace;
+}
+#top div a:active {
+  background: #001;
+  color: #888;
+}
+#top div a.active {
+  background: #000;
+  color: #eee;
+  cursor: default;
+}
+#bottom div {
+  font-size: 0.8em;
+}
+#bottom a {
+  color: #678;
+}
+#bottom a:hover {
+  color: #9ab;
+}
+#bottom > a {
+  float: right;
+  margin: 0 5%;
+  opacity: 0.1;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)";
+  filter: alpha(opacity=10);
+  transition: all 200ms;
+}
+#bottom > a:hover {
+  opacity: 0.4;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=40)";
+  filter: alpha(opacity=40);
+}
+#bottom > a img {
+  width: 10em;
+  border: 0;
+}
+cite {
+  display: block;
+  clear: both;
+}
+a.hidden,
+div.hidden {
+  display: none;
+}
+@media screen and (max-width: 479px) {
+  body {
+    font-size: 12px;
+  }
+}
