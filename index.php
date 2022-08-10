@@ -1,32 +1,13 @@
 <?
+namespace ClrHome;
+
+define('ClrHome\EMPTY_MESSAGE', 'Double-click to edit');
+
 include(__DIR__ . '/lib/cleverly/Cleverly.class.php');
-
-function rep1($match) {
-	return $match[2] == $_GET['lang'] . ':' ? $match[0] : '';
-}
-
-function rep2($match) {
-	global $pretty, $space;
-	preg_match('#^\n\s*#', $match[2], $spaces);
-	preg_match_all('# (([-\w]+:)?[-\w]+)(="(.*?)")#', $match[1], $matches, PREG_SET_ORDER);
-
-	if ($pretty and preg_match('#^\s*$#', $match[2]))
-		$spaces[0] .= '	';
-
-	foreach ($matches as $submatch)
-		if ($submatch[2] != 'xmlns:' and $submatch[1] != 'xmlns')
-			$match[2] = $spaces[0] . "\"$submatch[1]\":$space\"$submatch[4]\"," . $match[2];
-
-	return '{' . preg_replace_callback('#<(.*?)(>(.*?)</\1| ?/)>#', 'rep3', $match[2]) . '},';
-}
-
-function rep3($match) {
-	global $space;
-	return "\"$match[1]\":$space\"" . str_replace('"', '\"', $match[3]) . '",';
-}
+include(__DIR__ . '/src/classes/Catalog.class.php');
 
 function u_parse($table, $prefix) {
-	global $empty, $ns, $nss;
+	global $ns;
 	$rss = $table->childNodes;
 	$table = array(array(), array(), array());
 	$keys = '<div class="keys">';
@@ -54,7 +35,7 @@ function u_parse($table, $prefix) {
 
 				foreach ($ss as $s) {
 					if ($s->namespaceURI == $ns or $s->nodeName == 'keys') {
-						$dl .= "<dt>$s->localName</dt><dd>" . ($s->nodeValue ? htmlentities($s->nodeValue, null, 'UTF-8') : $empty) . '</dd>';
+						$dl .= "<dt>$s->localName</dt><dd>" . ($s->nodeValue ? htmlentities($s->nodeValue, null, 'UTF-8') : EMPTY_MESSAGE) . '</dd>';
 
 						if ($s->nodeName != 'keys')
 							$has = true;
@@ -80,53 +61,26 @@ function u_parse($table, $prefix) {
 	return "$keys$values</div>";
 }
 
-$empty = 'Double-click to edit';
-$rss = new DOMDocument;
-$rss->load('catalog.xml');
+$language = @$_GET['lang'] ?: 'basic';
+$catalog = new Catalog($language);
+$first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
+$second_byte = is_numeric(@$_GET['j']) ? (int)$_GET['j'] : null;
+
+$rss = new \DOMDocument;
+$rss->load('src/catalog.xml');
 $nss = array('' => $rss->lookupNamespaceURI(null), 'axe' => $rss->lookupNamespaceURI('axe'), 'grammer' => $rss->lookupNamespaceURI('grammer'));
 $ns = $nss[$_GET['lang']];
 
 if ($_GET['alt']) {
-	$rss->formatOutput = $pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
-	$rs = $rss->firstChild;
-
-	if (is_numeric($_GET['i']))
-		$rs = $rs->childNodes->item($_GET['i']);
-
-	if (is_numeric($_GET['j'])) {
-		$rs = $rs->childNodes->item($_GET['j']);
-
-		if ($rs->nodeName != 'token') {
-			header('Location: ../?alt=' . $_GET['alt'] . (isset($_GET['prettyprint']) ? '&prettyprint=' . $_GET['prettyprint'] : ''));
-			die();
-		}
-	}
-
-	foreach ($nss as $prefix => $uri)
-		@$rs->setAttribute($prefix ? 'xmlns:' . $prefix : 'xmlns', $uri);
-
-	$rss = $rss->saveXML($rs);
-
-	if ($pretty)
-		$rss = str_replace(array('  ', '/>'), array('	', ' />'), $rss);
-
-	if ($_GET['lang'])
-		$rss = preg_replace_callback('#<(([-\w]+:)?(syntax|description)(-\w)*)(>.*?</\1| ?/)>#', 'rep1', $rss);
-	else
-		$rss = preg_replace('#<([-\w]+:[-\w]+)(>.*?</\1| ?/)>#', '', $rss);
-
-	$rss = preg_replace('#\n\s*\n#', '
-', $rss);
-	$space = $pretty ? ' ' : '';
+	$pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
 
 	switch ($_GET['alt']) {
 		case 'json':
 			header('Content-Type: application/json; charset=utf-8');
-			die(str_replace(array('&lt;', '&gt;', '&amp;'), array('<', '>', '&'), preg_replace('#,(\s*([\]\}]|$))#', '$1', preg_replace_callback('#<token(.*?)>(.*?)</token>#s', 'rep2', preg_replace('#<table.*?>#', '[', str_replace(array($pretty ? '<table />' : '<table/>', '</table>', $pretty ? '<token />' : '<token/>'), array('[],', '],', '{},'), $rss))))));
+			die($catalog->toJson($first_byte, $second_byte, $pretty));
 		case 'xml':
 			header('Content-Type: text/xml; charset=utf-8');
-			die(preg_replace('#<(token[^>]*)>\s*</token>#', "<$1$space/>", '<?xml version="1.0" encoding="UTF-8"?>
-' . $rss));
+			die($catalog->toXml($first_byte, $second_byte, $pretty));
 	}
 }
 
@@ -140,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		foreach ($_POST as $key => $value) {
 			if ($r = $rs->getElementsByTagNameNS($ns, $key) and $r->length) {
 				$value = str_replace(array("\r\n", "\n", "\r"), ' ', trim($value));
-				$r->item(0)->nodeValue = htmlspecialchars($value == $empty ? '' : $value);
+				$r->item(0)->nodeValue = htmlspecialchars($value == EMPTY_MESSAGE ? '' : $value);
 				file_put_contents('catalog.xml', $rss->saveXML(), LOCK_EX);
 				file_put_contents('log.txt', "Value $key of $_POST[i]" . ($_POST['j'] ? ',' . $_POST['j'] : '') . ' (' . $rs->getAttribute('id') . ") for $_GET[l] changed to
 	$value
@@ -155,8 +109,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	die($value);
 }
 
-if (is_numeric($_GET['i'])) {
-	header('Location: /catalog/' . ($_GET['lang'] ? $_GET['lang'] . '/' : '') . '#t' . bin2hex(chr($_GET['i']) . (is_numeric($_GET['j']) ? chr($_GET['j']) : '')));
+if ($first_byte !== null) {
+	header(sprintf(
+		"Location: /catalog/$language#t%s%s",
+		str_pad(dechex($first_byte), 2, '0', STR_PAD_LEFT),
+		$second_byte !== null
+			? str_pad(dechex($second_byte), 2, '0', STR_PAD_LEFT)
+			: ''
+	));
+
 	die();
 }
 
@@ -166,7 +127,7 @@ $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 
 $cleverly->display('index.tpl', [
 	'editable' => true,
-	'emptyMessage' => $empty,
+	'emptyMessage' => EMPTY_MESSAGE,
 	'gallery' => u_parse($rss->firstChild, 't'),
 	'lang' => $_GET['lang'] ?: 'basic'
 ]);
