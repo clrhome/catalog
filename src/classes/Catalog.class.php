@@ -9,6 +9,7 @@ final class Catalog {
 
   private \DOMDocument $catalog;
   private string $language;
+  private array $mutations = [];
   private array $namespaceUris;
 
   public function __construct(string $language) {
@@ -25,6 +26,44 @@ final class Catalog {
       'basic' => $this->catalog->lookupNamespaceURI(null),
       'grammer' => $this->catalog->lookupNamespaceURI('grammer')
     );
+  }
+
+  public static function formatByte(int $byte) {
+    return str_pad(dechex($byte), 2, '0', STR_PAD_LEFT);
+  }
+
+  public function save() {
+    file_put_contents(self::CATALOG_FILE, $this->catalog->saveXML(), LOCK_EX);
+  }
+
+  public function setElement(
+    int $first_byte,
+    int|null $second_byte,
+    string $key,
+    string $value
+  ) {
+    $token = $this->getNode($first_byte, $second_byte);
+
+    $fields = $token->getElementsByTagNameNS(
+      $this->namespaceUris[$this->language],
+      $key
+    );
+
+    if ($fields->length === 0) {
+      throw new \OutOfRangeException("Invalid token field $key");
+    }
+
+    $field = $fields->item(0);
+    $old_value = $field->nodeValue;
+    $field->nodeValue = $value;
+
+    array_push($this->mutations, new Catalog\Mutation(
+      $first_byte,
+      $second_byte,
+      $key,
+      $old_value,
+      $value
+    ));
   }
 
   public function toJson(
@@ -107,25 +146,49 @@ final class Catalog {
     );
   }
 
+  private function getNode(int|null $first_byte, int|null $second_byte) {
+    $node = $this->catalog->firstChild;
+
+    if ($first_byte !== null) {
+  		$node = $node->childNodes->item($first_byte);
+
+      if ($node === null) {
+        throw new \UnexpectedValueException(sprintf(
+          'Unrecognized token %s',
+          self::formatByte($first_byte)
+        ));
+      }
+    }
+
+  	if ($second_byte !== null) {
+      if ($first_byte === null) {
+        throw new \UnexpectedValueException(sprintf(
+          'Second byte %s should not be set if first byte is null',
+          self::formatByte($second_byte)
+        ));
+      }
+
+  		$node = $node->childNodes->item($second_byte);
+
+  		if ($node === null || $node->nodeName !== 'token') {
+        throw new \UnexpectedValueException(sprintf(
+          'Unrecognized token %s%s',
+          self::formatByte($first_byte),
+          self::formatByte($second_byte)
+        ));
+  		}
+  	}
+
+    return $node;
+  }
+
   private function toHeadlessXml(
     int|null $first_byte,
     int|null $second_byte,
     bool $pretty
   ) {
   	$this->catalog->formatOutput = $pretty;
-  	$node = $this->catalog->firstChild;
-
-    if ($first_byte !== null) {
-  		$node = $node->childNodes->item($first_byte);
-    }
-
-  	if ($second_byte !== null) {
-  		$node = $node->childNodes->item($second_byte);
-
-  		if ($node->nodeName !== 'token') {
-  			throw new \UnexpectedValueException('Exported node is not a token');
-  		}
-  	}
+    $node = $this->getNode($first_byte, $second_byte);
 
   	foreach ($this->namespaceUris as $namespace => $uri) {
   		$node->setAttribute(
@@ -153,6 +216,45 @@ final class Catalog {
     }
 
   	return preg_replace('/^\s*\n/m', '', $headless_xml);
+  }
+}
+
+namespace ClrHome\Catalog;
+
+final class Mutation {
+  private int $firstByte;
+  private string $key;
+  private string $newValue;
+  private int|null $secondByte;
+  private string $oldValue;
+
+  public function __construct(
+    int $first_byte,
+    int|null $second_byte,
+    string $key,
+    string $old_value,
+    string $new_value
+  ) {
+    $this->firstByte = $first_byte;
+    $this->secondByte = $second_byte;
+    $this->key = $key;
+    $this->oldValue = $old_value;
+    $this->newValue = $new_value;
+  }
+
+  public function toYaml() {
+    $second_byte = $this->secondByte ?? 'null';
+    $old_value = $this->oldValue ?? 'null';
+    $new_value = $this->newValue ?? 'null';
+
+    return <<<EOF
+- firstByte: $this->firstByte
+  secondByte: $second_byte
+  key: $this->key
+  oldValue: $old_value
+  newValue: $new_value
+
+EOF;
   }
 }
 ?>

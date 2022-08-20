@@ -1,7 +1,7 @@
 <?
 namespace ClrHome;
 
-define('ClrHome\EMPTY_MESSAGE', 'Double-click to edit');
+define('ClrHome\CATALOG_EMPTY_MESSAGE', 'Double-click to edit');
 
 include(__DIR__ . '/lib/cleverly/Cleverly.class.php');
 include(__DIR__ . '/src/classes/Catalog.class.php');
@@ -35,7 +35,7 @@ function u_parse($table, $prefix) {
 
 				foreach ($ss as $s) {
 					if ($s->namespaceURI == $ns or $s->nodeName == 'keys') {
-						$dl .= "<dt>$s->localName</dt><dd>" . ($s->nodeValue ? htmlentities($s->nodeValue, null, 'UTF-8') : EMPTY_MESSAGE) . '</dd>';
+						$dl .= "<dt>$s->localName</dt><dd>" . ($s->nodeValue ? htmlentities($s->nodeValue, null, 'UTF-8') : CATALOG_EMPTY_MESSAGE) . '</dd>';
 
 						if ($s->nodeName != 'keys')
 							$has = true;
@@ -85,37 +85,35 @@ if ($_GET['alt']) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-	if (is_numeric($_POST['i'])) {
-		$rs = $rss->firstChild->childNodes->item($_POST['i']);
+	$first_byte = is_numeric(@$_POST['i']) ? (int)$_POST['i'] : null;
+	$second_byte = is_numeric(@$_POST['j']) ? (int)$_POST['j'] : null;
+	$sanitized_value = '';
 
-		if (is_numeric($_POST['j']))
-			$rs = $rs->childNodes->item($_POST['j']);
-
+	if ($first_byte !== null) {
 		foreach ($_POST as $key => $value) {
-			if ($r = $rs->getElementsByTagNameNS($ns, $key) and $r->length) {
-				$value = str_replace(array("\r\n", "\n", "\r"), ' ', trim($value));
-				$r->item(0)->nodeValue = htmlspecialchars($value == EMPTY_MESSAGE ? '' : $value);
-				file_put_contents('catalog.xml', $rss->saveXML(), LOCK_EX);
-				file_put_contents('log.txt', "Value $key of $_POST[i]" . ($_POST['j'] ? ',' . $_POST['j'] : '') . ' (' . $rs->getAttribute('id') . ") for $_GET[l] changed to
-	$value
+			try {
+				$sanitized_value =
+						str_replace(array("\r\n", "\n", "\r"), ' ', trim($value));
 
-", FILE_APPEND);
-			} else {
-				$value = '';
-			}
+				$sanitized_value = htmlspecialchars(
+					$sanitized_value == CATALOG_EMPTY_MESSAGE ? '' : $sanitized_value
+				);
+
+				$catalog->setElement($first_byte, $second_byte, $key, $sanitized_value);
+			} catch (\OutOfRangeException) {}
 		}
+
+		$catalog->save();
 	}
 
-	die($value);
+	die($sanitized_value);
 }
 
 if ($first_byte !== null) {
 	header(sprintf(
 		"Location: /catalog/$language#t%s%s",
-		str_pad(dechex($first_byte), 2, '0', STR_PAD_LEFT),
-		$second_byte !== null
-			? str_pad(dechex($second_byte), 2, '0', STR_PAD_LEFT)
-			: ''
+		Catalog::formatByte($first_byte),
+		$second_byte !== null ? Catalog::formatByte($second_byte) : ''
 	));
 
 	die();
@@ -127,7 +125,7 @@ $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 
 $cleverly->display('index.tpl', [
 	'editable' => true,
-	'emptyMessage' => EMPTY_MESSAGE,
+	'emptyMessage' => CATALOG_EMPTY_MESSAGE,
 	'gallery' => u_parse($rss->firstChild, 't'),
 	'lang' => $_GET['lang'] ?: 'basic'
 ]);
