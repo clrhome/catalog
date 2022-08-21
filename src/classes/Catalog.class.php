@@ -4,6 +4,7 @@ namespace ClrHome;
 final class Catalog {
   const CATALOG_FILE = __DIR__ . '/../catalog.xml';
   const LANGUAGE_BASIC = 'basic';
+  const LOG_FILE = __DIR__ . '/../../log.yaml';
   const NAMESPACES =
       array('axe' => 'axe', 'basic' => null, 'grammer' => 'grammer');
 
@@ -34,6 +35,12 @@ final class Catalog {
 
   public function save() {
     file_put_contents(self::CATALOG_FILE, $this->catalog->saveXML(), LOCK_EX);
+
+    foreach ($this->mutations as $mutation) {
+      file_put_contents(self::LOG_FILE, $mutation->toYaml(), FILE_APPEND);
+    }
+
+    $this->mutations = [];
   }
 
   public function setElement(

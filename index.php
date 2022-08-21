@@ -63,26 +63,6 @@ function u_parse($table, $prefix) {
 
 $language = @$_GET['lang'] ?: 'basic';
 $catalog = new Catalog($language);
-$first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
-$second_byte = is_numeric(@$_GET['j']) ? (int)$_GET['j'] : null;
-
-$rss = new \DOMDocument;
-$rss->load('src/catalog.xml');
-$nss = array('' => $rss->lookupNamespaceURI(null), 'axe' => $rss->lookupNamespaceURI('axe'), 'grammer' => $rss->lookupNamespaceURI('grammer'));
-$ns = $nss[$_GET['lang']];
-
-if ($_GET['alt']) {
-	$pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
-
-	switch ($_GET['alt']) {
-		case 'json':
-			header('Content-Type: application/json; charset=utf-8');
-			die($catalog->toJson($first_byte, $second_byte, $pretty));
-		case 'xml':
-			header('Content-Type: text/xml; charset=utf-8');
-			die($catalog->toXml($first_byte, $second_byte, $pretty));
-	}
-}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$first_byte = is_numeric(@$_POST['i']) ? (int)$_POST['i'] : null;
@@ -107,6 +87,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	}
 
 	die($sanitized_value);
+}
+
+$first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
+$second_byte = is_numeric(@$_GET['j']) ? (int)$_GET['j'] : null;
+
+$rss = new \DOMDocument;
+$rss->load('src/catalog.xml');
+$nss = array('' => $rss->lookupNamespaceURI(null), 'axe' => $rss->lookupNamespaceURI('axe'), 'grammer' => $rss->lookupNamespaceURI('grammer'));
+$ns = $nss[$_GET['lang']];
+
+if (array_key_exists('alt', $_GET)) {
+	$pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
+
+	switch ($_GET['alt']) {
+		case 'json':
+			header('Content-Type: application/json; charset=utf-8');
+			die($catalog->toJson($first_byte, $second_byte, $pretty));
+		case 'xml':
+			header('Content-Type: text/xml; charset=utf-8');
+			die($catalog->toXml($first_byte, $second_byte, $pretty));
+	}
 }
 
 if ($first_byte !== null) {

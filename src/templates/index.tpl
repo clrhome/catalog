@@ -21,7 +21,7 @@
             k[$(this).parent().prev().html()] = $(this).val();
 
             $.post('./', k, function(e) {
-              b.parent().text(e ? e : '$empty');
+              b.parent().text(e ? e : '{$emptyMessage}');
             });
           }).dblclick(false);
         });
