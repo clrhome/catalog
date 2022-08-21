@@ -8,18 +8,16 @@
     <script type="text/javascript" src="/lib/js/jquery.js"></script>
     <script type="text/javascript" src="/lib/js/ga.js"></script>
     <script type="text/javascript">// <![CDATA[
-      const EMPTY_MESSAGE = '{$emptyMessage}';
-{if $editable}
-      $(function() {
+{if $editable}      $(function() {
         $('.values dd').dblclick(function() {
-          $(this).wrapInner('<textarea />').children().focus().select().blur(function() {
+          $(this).html('<textarea>' + $(this).text() + '</textarea>').children().focus().select().blur(function() {
             var e = $('.keys a.active').last().attr('href');
             b = $(this);
             var k = {i: parseInt(e.slice(2, 4), 16), j: parseInt(e.slice(4, 6), 16)};
             k[$(this).parent().prev().html()] = $(this).val();
 
             $.post('./', k, function(e) {
-              b.parent().text(e ? e : '{$emptyMessage}');
+              b.parent().html(e);
             });
           }).dblclick(false);
         });

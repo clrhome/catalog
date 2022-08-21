@@ -60,15 +60,18 @@ final class Catalog {
 
     $field = $fields->item(0);
     $old_value = $field->nodeValue;
-    $field->nodeValue = $value;
 
-    array_push($this->mutations, new Catalog\Mutation(
-      $first_byte,
-      $second_byte,
-      $key,
-      $old_value,
-      $value
-    ));
+    if ($value !== $old_value) {
+      $field->nodeValue = $value;
+
+      array_push($this->mutations, new Catalog\Mutation(
+        $first_byte,
+        $second_byte,
+        $key,
+        $old_value,
+        $value
+      ));
+    }
   }
 
   public function toJson(

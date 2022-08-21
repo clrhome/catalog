@@ -2,13 +2,41 @@
 namespace ClrHome;
 
 final class CatalogTokenField {
-  public function __construct(public string $key, public string $value) {}
-}
-
-final class CatalogToken {
   const EMPTY_MESSAGE = 'Double-click to edit';
   const FIELD_KEYS = 'keys';
 
+  public string $key;
+  public string $value;
+
+  public function __construct(string $key, string $value) {
+    $this->key = $key;
+    $this->value = self::formatValue($key, $value);
+  }
+
+  public static function formatValue(string $key, string $value) {
+    $encoded_value =
+        htmlentities($value, null, 'UTF-8') ?: self::EMPTY_MESSAGE;
+    return $key === self::FIELD_KEYS
+      ? preg_replace(
+        array(
+          '/^\(2nd\) (\[[^\]]+\])/',
+          '/^\(ALPHA\) (\[[^\]]+\])/',
+          '/^\([^\)]+\)/',
+          '/> ([^<]+)/',
+        ),
+        array(
+          '<kbd class="second">(2nd)</kbd> <mark>$1</mark>',
+          '<kbd class="alpha">(ALPHA)</kbd> <mark>$1</mark>',
+          '<kbd>$0</kbd>',
+          '> <samp>$1</samp>'
+        ),
+        $encoded_value
+      )
+      : preg_replace('/&lt;\w+&gt;/', '<var>$0</var>', $encoded_value);
+  }
+}
+
+final class CatalogToken {
   public string $bytes;
   public array $fields;
   private string $id;
@@ -28,12 +56,11 @@ final class CatalogToken {
     foreach ($node->childNodes as $field_node) {
       if (
         $field_node->namespaceURI === $namespace ||
-            $field_node === self::FIELD_KEYS
+            $field_node === CatalogTokenField::FIELD_KEYS
       ) {
         array_push($this->fields, new CatalogTokenField(
           $field_node->localName,
-          htmlentities($field_node->nodeValue, null, 'UTF-8') ?:
-              self::EMPTY_MESSAGE
+          $field_node->nodeValue
         ));
       }
     }

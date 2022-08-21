@@ -128,6 +128,26 @@ dd {
   margin: 1em 0;
   padding: 0;
 }
+kbd {
+  background-color: #334;
+  color: #def;
+}
+kbd.second {
+  background-color: #c93;
+}
+kbd.alpha {
+  background-color: #399;
+}
+mark {
+  background-color: transparent;
+  font-family: monospace;
+}
+.second + mark {
+  color: #c93;
+}
+.alpha + mark {
+  color: #399;
+}
 textarea {
   width: 100%;
   height: 4em;

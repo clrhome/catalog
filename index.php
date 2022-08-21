@@ -10,6 +10,7 @@ $catalog = new Catalog($language);
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$first_byte = is_numeric(@$_POST['i']) ? (int)$_POST['i'] : null;
 	$second_byte = is_numeric(@$_POST['j']) ? (int)$_POST['j'] : null;
+	$key = '';
 	$sanitized_value = '';
 
 	if ($first_byte !== null) {
@@ -18,20 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 				$sanitized_value =
 						str_replace(array("\r\n", "\n", "\r"), ' ', trim($value));
 
-				$sanitized_value = htmlspecialchars(
-					$sanitized_value == CatalogToken::EMPTY_MESSAGE
+				$catalog->setElement($first_byte, $second_byte, $key, htmlspecialchars(
+					$sanitized_value == CatalogTokenField::EMPTY_MESSAGE
 						? ''
 						: $sanitized_value
-				);
-
-				$catalog->setElement($first_byte, $second_byte, $key, $sanitized_value);
+				));
 			} catch (\OutOfRangeException) {}
 		}
 
 		$catalog->save();
 	}
 
-	die($sanitized_value);
+	die(CatalogTokenField::formatValue($key, $sanitized_value));
 }
 
 $first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
@@ -66,7 +65,7 @@ $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 
 $cleverly->display('index.tpl', [
 	'editable' => true,
-	'emptyMessage' => CatalogToken::EMPTY_MESSAGE,
+	'emptyMessage' => CatalogTokenField::EMPTY_MESSAGE,
 	'language' => $language,
 	'element' => $catalog->toTable()
 ]);
