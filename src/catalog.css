@@ -20,6 +20,7 @@ main {
 input {
   display: block;
   width: 100%;
+  box-sizing: border-box;
   margin-top: 1em;
   border: 0.064em solid #455;
   border-radius: 0.32em;
@@ -54,22 +55,22 @@ input.red:focus {
 .gallery > div {
   min-width: 48em;
 }
-.keys,
-.values,
-.values div {
+.left,
+.right,
+.right div {
   height: 20em;
 }
-.keys {
+.left {
   width: 25%;
   float: left;
   overflow: auto;
   background-color: #899;
 }
-.values .keys {
+.right .left {
   width: 33%;
   background-color: #9aa;
 }
-.keys a {
+.left a {
   display: block;
   border-bottom: 0.1em solid #677;
   padding: 0.5em 1em;
@@ -79,41 +80,41 @@ input.red:focus {
   color: #223;
   cursor: default;
 }
-.values .keys a {
+.right .left a {
   border-color: #788;
   color: #334;
 }
-.keys a:active,
-.keys a.active {
+.left a:active,
+.left a.active {
   background-color: #112;
   color: #bbd;
 }
-.values .keys a:active,
-.values .keys a.active {
+.right .left a:active,
+.right .left a.active {
   background-color: #223;
   color: #cce;
 }
-.keys .table:after {
+.left .table:after {
   float: right;
   font-weight: normal;
 }
-.keys .table.active:after {
+.left .table.active:after {
   content: "\25B6";
 }
-.keys .table:after,
-.keys .table:active:after {
+.left .table:after,
+.left .table:active:after {
   content: "\25B7";
 }
-.values {
+.right {
   border-left: 0.1em solid #889;
   background-color: #def;
   color: #334;
 }
-.values,
-.values .values {
+.right,
+.right .right {
   overflow: hidden;
 }
-.values div {
+.right div {
   overflow: auto;
 }
 dl {
@@ -128,6 +129,10 @@ dd {
   margin: 1em 0;
   padding: 0;
 }
+dd.syntax,
+dd.keys {
+  font-family: monospace;
+}
 kbd {
   background-color: #334;
   color: #def;
@@ -140,7 +145,6 @@ kbd.alpha {
 }
 mark {
   background-color: transparent;
-  font-family: monospace;
 }
 .second + mark {
   color: #c93;
@@ -156,6 +160,7 @@ textarea {
   padding: 0;
   background-color: transparent;
   font-size: 1em;
+  font-family: inherit;
 }
 header > a {
   float: left;

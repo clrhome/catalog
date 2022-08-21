@@ -1,2 +1,2 @@
 <dt>{$field.key}</dt>
-<dd>{$field.value}</dd>
+<dd class="{$field.key}">{$field.value}</dd>

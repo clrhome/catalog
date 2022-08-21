@@ -1,6 +1,6 @@
 function ohc() {
   if (!window.location.hash || window.location.hash == "#") {
-    $(".keys a.active").removeClass("active");
+    $(".left a.active").removeClass("active");
     $(".values").first().scrollTop(0);
   } else {
     var e = $("[href=" + window.location.hash + "]");
@@ -16,7 +16,7 @@ function t(e, f) {
     .children("a")
     .each(function () {
       var g = $($(this).attr("href"));
-      var h = g.children(".keys");
+      var h = g.children(".left");
       h = h.length ? t(h, f) : $(this).text().toUpperCase().indexOf(f) + 1;
       g.add(this).toggleClass("hidden", !Boolean(h));
       i += h;
@@ -28,7 +28,7 @@ function t(e, f) {
 $(function () {
   u = 0;
 
-  $(".keys a")
+  $(".left a")
     .mousedown(function () {
       var e = $(this).attr("href");
       $(".values .values").scrollTop(0);
@@ -37,7 +37,7 @@ $(function () {
         .focus()
         .blur()
         .siblings()
-        .add(".values .keys a.active")
+        .add(".values .left a.active")
         .removeClass("active")
         .end()
         .end()
@@ -85,7 +85,7 @@ $(function () {
         return true;
       }
 
-      var f = $(".keys a.active");
+      var f = $(".left a.active");
 
       switch (e.keyCode) {
         case 27:
@@ -111,18 +111,18 @@ $(function () {
         case 13:
         case 39:
           if (!f.length) {
-            $(".keys a:not(.hidden)").first().mousedown();
+            $(".left a:not(.hidden)").first().mousedown();
             return false;
           }
 
-          $(f.attr("href") + " .keys a:not(.hidden)")
+          $(f.attr("href") + " .left a:not(.hidden)")
             .first()
             .mousedown();
           return false;
         case 38:
         case 75:
           if (!f.length) {
-            $(".keys").first().children("a:not(.hidden)").last().mousedown();
+            $(".left").first().children("a:not(.hidden)").last().mousedown();
             return false;
           }
 
@@ -155,7 +155,7 @@ $(function () {
         window.location.hash = "";
 
         if (e.length)
-          $("input").addClass(t(".gallery > div > .keys", e) ? "green" : "red");
+          $("input").addClass(t(".gallery > div > .left", e) ? "green" : "red");
         else $(".hidden").removeClass("hidden");
       }, 100);
     });
