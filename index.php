@@ -1,65 +1,8 @@
 <?
 namespace ClrHome;
 
-define('ClrHome\CATALOG_EMPTY_MESSAGE', 'Double-click to edit');
-
 include(__DIR__ . '/lib/cleverly/Cleverly.class.php');
 include(__DIR__ . '/src/classes/Catalog.class.php');
-
-function u_parse($table, $prefix) {
-	global $ns;
-	$rss = $table->childNodes;
-	$table = array(array(), array(), array());
-	$keys = '<div class="keys">';
-	$values = '</div><div class="values"><div></div>';
-
-	foreach ($rss as $rs => $r) {
-		$tid = $prefix . str_pad(dechex($rs), 2, '0', STR_PAD_LEFT);
-
-		if ($r->nodeName == 'table') {
-			$has = u_parse($r, $tid);
-
-			if ($has != "$keys$values</div>")
-				$table[0][] = array("<a class=\"table\" href=\"#$tid\">" . ($r->getAttribute('name') ? $r->getAttribute('name') : strtoupper(dechex($rs)) . ' tokens') . '</a>', "<div id=\"$tid\">" . u_parse($r, $tid) . '</div>');
-		} else {
-			$id = $r->getAttributeNS($ns, 'id');
-
-			if (!$id)
-				$id = $r->getAttributeNS(null, 'id');
-
-			if (strlen($id)) {
-				$sid = preg_replace('#[^a-z]#i', '', $id);
-				$dl = '<dl>';
-				$ss = $r->childNodes;
-				$has = false;
-
-				foreach ($ss as $s) {
-					if ($s->namespaceURI == $ns or $s->nodeName == 'keys') {
-						$dl .= "<dt>$s->localName</dt><dd>" . ($s->nodeValue ? htmlentities($s->nodeValue, null, 'UTF-8') : CATALOG_EMPTY_MESSAGE) . '</dd>';
-
-						if ($s->nodeName != 'keys')
-							$has = true;
-					}
-				}
-
-				if ($has)
-					$table[$sid ? 1 : 2][$sid ? strtoupper($sid) . $rs : $id] = array("<a href=\"#$tid\">" . htmlentities($id, null, 'UTF-8') . '</a>', "<div id=\"$tid\">$dl</dl></div>");
-			}
-		}
-	}
-
-	ksort($table[1]);
-	ksort($table[2]);
-
-	foreach ($table as $tr) {
-		foreach ($tr as $td) {
-			$keys .= $td[0];
-			$values .= $td[1];
-		}
-	}
-
-	return "$keys$values</div>";
-}
 
 $language = @$_GET['lang'] ?: 'basic';
 $catalog = new Catalog($language);
@@ -76,7 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 						str_replace(array("\r\n", "\n", "\r"), ' ', trim($value));
 
 				$sanitized_value = htmlspecialchars(
-					$sanitized_value == CATALOG_EMPTY_MESSAGE ? '' : $sanitized_value
+					$sanitized_value == CatalogToken::EMPTY_MESSAGE
+						? ''
+						: $sanitized_value
 				);
 
 				$catalog->setElement($first_byte, $second_byte, $key, $sanitized_value);
@@ -91,11 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
 $second_byte = is_numeric(@$_GET['j']) ? (int)$_GET['j'] : null;
-
-$rss = new \DOMDocument;
-$rss->load('src/catalog.xml');
-$nss = array('' => $rss->lookupNamespaceURI(null), 'axe' => $rss->lookupNamespaceURI('axe'), 'grammer' => $rss->lookupNamespaceURI('grammer'));
-$ns = $nss[$_GET['lang']];
 
 if (array_key_exists('alt', $_GET)) {
 	$pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
@@ -113,8 +53,8 @@ if (array_key_exists('alt', $_GET)) {
 if ($first_byte !== null) {
 	header(sprintf(
 		"Location: /catalog/$language#t%s%s",
-		Catalog::formatByte($first_byte),
-		$second_byte !== null ? Catalog::formatByte($second_byte) : ''
+		CatalogTable::formatByte($first_byte),
+		$second_byte !== null ? CatalogTable::formatByte($second_byte) : ''
 	));
 
 	die();
@@ -126,8 +66,8 @@ $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 
 $cleverly->display('index.tpl', [
 	'editable' => true,
-	'emptyMessage' => CATALOG_EMPTY_MESSAGE,
-	'gallery' => u_parse($rss->firstChild, 't'),
-	'lang' => $_GET['lang'] ?: 'basic'
+	'emptyMessage' => CatalogToken::EMPTY_MESSAGE,
+	'language' => $language,
+	'element' => $catalog->toTable()
 ]);
 ?>

@@ -1,6 +1,8 @@
 <?php
 namespace ClrHome;
 
+include(__DIR__ . '/CatalogTable.class.php');
+
 final class Catalog {
   const CATALOG_FILE = __DIR__ . '/../catalog.xml';
   const LANGUAGE_BASIC = 'basic';
@@ -27,10 +29,6 @@ final class Catalog {
       'basic' => $this->catalog->lookupNamespaceURI(null),
       'grammer' => $this->catalog->lookupNamespaceURI('grammer')
     );
-  }
-
-  public static function formatByte(int $byte) {
-    return str_pad(dechex($byte), 2, '0', STR_PAD_LEFT);
   }
 
   public function save() {
@@ -135,6 +133,14 @@ final class Catalog {
     );
   }
 
+  public function toTable() {
+    return new CatalogTable(
+      '',
+      $this->namespaceUris[$this->language],
+      $this->catalog->firstChild
+    );
+  }
+
   public function toXml(
     int|null $first_byte,
     int|null $second_byte,
@@ -162,7 +168,7 @@ final class Catalog {
       if ($node === null) {
         throw new \UnexpectedValueException(sprintf(
           'Unrecognized token %s',
-          self::formatByte($first_byte)
+          CatalogTable::formatByte($first_byte)
         ));
       }
     }
@@ -171,7 +177,7 @@ final class Catalog {
       if ($first_byte === null) {
         throw new \UnexpectedValueException(sprintf(
           'Second byte %s should not be set if first byte is null',
-          self::formatByte($second_byte)
+          CatalogTable::formatByte($second_byte)
         ));
       }
 
@@ -180,8 +186,8 @@ final class Catalog {
   		if ($node === null || $node->nodeName !== 'token') {
         throw new \UnexpectedValueException(sprintf(
           'Unrecognized token %s%s',
-          self::formatByte($first_byte),
-          self::formatByte($second_byte)
+          CatalogTable::formatByte($first_byte),
+          CatalogTable::formatByte($second_byte)
         ));
   		}
   	}
@@ -229,30 +235,19 @@ final class Catalog {
 namespace ClrHome\Catalog;
 
 final class Mutation {
-  private int $firstByte;
-  private string $key;
-  private string $newValue;
-  private int|null $secondByte;
-  private string $oldValue;
-
   public function __construct(
-    int $first_byte,
-    int|null $second_byte,
-    string $key,
-    string $old_value,
-    string $new_value
-  ) {
-    $this->firstByte = $first_byte;
-    $this->secondByte = $second_byte;
-    $this->key = $key;
-    $this->oldValue = $old_value;
-    $this->newValue = $new_value;
-  }
+    private int $firstByte,
+    private int|null $secondByte,
+    private string $key,
+    private string $oldValue,
+    private string $newValue
+  ) {}
 
   public function toYaml() {
     $second_byte = $this->secondByte ?? 'null';
     $old_value = $this->oldValue ?? 'null';
     $new_value = $this->newValue ?? 'null';
+    $timestamp = date('c');
 
     return <<<EOF
 - firstByte: $this->firstByte
@@ -260,6 +255,7 @@ final class Mutation {
   key: $this->key
   oldValue: $old_value
   newValue: $new_value
+  timestamp: $timestamp
 
 EOF;
   }

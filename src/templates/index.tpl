@@ -12,8 +12,6 @@
 {if $editable}
       $(function() {
         $('.values dd').dblclick(function() {
-          console.log('hello');
-
           $(this).wrapInner('<textarea />').children().focus().select().blur(function() {
             var e = $('.keys a.active').last().attr('href');
             b = $(this);
@@ -35,25 +33,25 @@
         <img src="/catalog/bar.png" alt="The Catalog: Online Token Reference" />
       </a>
       <nav>
-        <a href="/catalog/"{if $lang eq 'basic'} class="active"{/if}>TI-BASIC</a>
-        <a href="/catalog/axe/"{if $lang eq 'axe'} class="active"{/if}>Axe</a>
-        <a href="/catalog/grammer/"{if $lang eq 'grammer'} class="active"{/if}>Grammer</a>
+        <a href="/catalog/"{if $language eq 'basic'} class="active"{/if}>TI-BASIC</a>
+        <a href="/catalog/axe/"{if $language eq 'axe'} class="active"{/if}>Axe</a>
+        <a href="/catalog/grammer/"{if $language eq 'grammer'} class="active"{/if}>Grammer</a>
       </nav>
     </header>
     <main>
       <div class="gallery">
         <div>
-          {$gallery}
+          {include file='table.tpl'}
         </div>
       </div>
       <input type="text" />
     </main>
     <footer>
-      <a href="https://clrhome.org/resources/">
+      <a href="/resources/">
         <span>another resource by</span>
         <img src="/images/emblem.png" alt="ClrHome" />
       </a>
-      <p>{if $lang eq 'basic'}Guidebook used with permission from TI. <a href="http://education.ti.com/">http://education.ti.com/</a>{/if}{if $lang eq 'axe'}Axe Parser Commands List used with permission from Quigibo.{/if}{if $lang eq 'grammer'}Grammer Commands List used with permission from Xeda Elnara.{/if}</p>
+      <p>{if $language eq 'basic'}Guidebook used with permission from TI. <a href="http://education.ti.com/">http://education.ti.com/</a>{/if}{if $language eq 'axe'}Axe Parser Commands List used with permission from Quigibo.{/if}{if $language eq 'grammer'}Grammer Commands List used with permission from Xeda Elnara.{/if}</p>
       <p>Other content may be user-contributed.</p>
       <p>ClrHome makes no guarantees of accuracy of the information present on this page.</p>
       <p>Please <a href="/?action=register">log in</a> or <a href="/?action=register">register</a> to contribute to this wiki.</p>
