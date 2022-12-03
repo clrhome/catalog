@@ -1,28 +1,30 @@
-function ohc() {
-  if (!window.location.hash || window.location.hash == "#") {
+function navigateGalleryFromHash() {
+  if (window.location.hash.length <= 1) {
     $(".left a.active").removeClass("active");
     $(".values").first().scrollTop(0);
   } else {
-    var e = $("[href=" + window.location.hash + "]");
-
-    if (!e.hasClass("active")) e.mousedown();
+    $("[href=" + window.location.hash + "]")
+      .not(".active")
+      .mousedown();
   }
 }
 
-function t(e, f) {
-  var i = 0;
+function applyTableFilter(tableSelector, filterText) {
+  var matched = false;
 
-  $(e)
+  $(tableSelector)
     .children("a")
     .each(function () {
-      var g = $($(this).attr("href"));
-      var h = g.children(".left");
-      h = h.length ? t(h, f) : $(this).text().toUpperCase().indexOf(f) + 1;
-      g.add(this).toggleClass("hidden", !Boolean(h));
-      i += h;
+      var linkedRight = $($(this).attr("href"));
+      var nestedTable = linkedRight.children(".left");
+      nestedTable = nestedTable.length
+        ? applyTableFilter(nestedTable, filterText)
+        : $(this).text().toUpperCase().indexOf(filterText) + 1;
+      linkedRight.add(this).toggleClass("hidden", !Boolean(nestedTable));
+      matched += nestedTable;
     });
 
-  return i;
+  return matched;
 }
 
 $(function () {
@@ -54,7 +56,7 @@ $(function () {
         $.get(
           parseInt(e.slice(2, 4), 16) +
             (e.length > 4 ? "/" + parseInt(e.slice(4, 6), 16) : "") +
-            "/?alt=json&" +
+            "/?alt=json&html=1&" +
             new Date().getTime(),
           function (e, f, g) {
             g.target
@@ -66,7 +68,7 @@ $(function () {
                 if (k in e)
                   $(this)
                     .next()
-                    .text(e[k] ? e[k] : EMPTY_MESSAGE);
+                    .html(e[k] ? e[k] : EMPTY_MESSAGE);
               });
           }
         ).target = f;
@@ -155,11 +157,15 @@ $(function () {
         window.location.hash = "";
 
         if (e.length)
-          $("input").addClass(t(".gallery > div > .left", e) ? "green" : "red");
+          $("input").addClass(
+            applyTableFilter(".gallery > div > div > .left", e)
+              ? "green"
+              : "red"
+          );
         else $(".hidden").removeClass("hidden");
       }, 100);
     });
 
-  window.onhashchange = ohc;
-  ohc();
+  window.onhashchange = navigateGalleryFromHash;
+  navigateGalleryFromHash();
 });

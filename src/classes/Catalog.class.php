@@ -43,7 +43,7 @@ final class Catalog {
 
   public function setElement(
     int $first_byte,
-    int|null $second_byte,
+    ?int $second_byte,
     string $key,
     string $value
   ) {
@@ -75,9 +75,10 @@ final class Catalog {
   }
 
   public function toJson(
-    int|null $first_byte,
-    int|null $second_byte,
-    bool $pretty
+    ?int $first_byte,
+    ?int $second_byte,
+    bool $pretty,
+    bool $html
   ) {
   	$space = $pretty ? ' ' : '';
 
@@ -128,7 +129,7 @@ final class Catalog {
             str_replace(
               array('<table/>', '</table>', '<token/>'),
               array('[],', '],', '{},'),
-              $this->toHeadlessXml($first_byte, $second_byte, $pretty)
+              $this->toHeadlessXml($first_byte, $second_byte, $pretty, $html)
             )
           )
         )
@@ -145,9 +146,10 @@ final class Catalog {
   }
 
   public function toXml(
-    int|null $first_byte,
-    int|null $second_byte,
-    bool $pretty
+    ?int $first_byte,
+    ?int $second_byte,
+    bool $pretty,
+    bool $html
   ) {
     $space = $pretty ? ' ' : '';
 
@@ -157,12 +159,12 @@ final class Catalog {
       preg_replace(
         '/<(token[^>]*)>\s*<\/token>/',
         "<$1/>",
-        $this->toHeadlessXml($first_byte, $second_byte, $pretty)
+        $this->toHeadlessXml($first_byte, $second_byte, $pretty, $html)
       )
     );
   }
 
-  private function getNode(int|null $first_byte, int|null $second_byte) {
+  private function getNode(?int $first_byte, ?int $second_byte) {
     $node = $this->catalog->firstChild;
 
     if ($first_byte !== null) {
@@ -199,9 +201,10 @@ final class Catalog {
   }
 
   private function toHeadlessXml(
-    int|null $first_byte,
-    int|null $second_byte,
-    bool $pretty
+    ?int $first_byte,
+    ?int $second_byte,
+    bool $pretty,
+    bool $html
   ) {
   	$this->catalog->formatOutput = $pretty;
     $node = $this->getNode($first_byte, $second_byte);
@@ -231,20 +234,42 @@ final class Catalog {
       );
     }
 
-  	return preg_replace('/^\s*\n/m', '', $headless_xml);
+    $headless_xml = preg_replace('/^\s*\n/m', '', $headless_xml);
+
+  	return $html ? preg_replace_callback(
+      '/<(([-\w]+:)?[-\w]+)>(.*?)<\/\1>/',
+      function($matches) {
+        return "<$matches[1]>" .
+            CatalogTokenField::formatValue($matches[1], $matches[3]) .
+            "</$matches[1]>";
+      },
+      $headless_xml
+    ) : $headless_xml;
   }
 }
 
 namespace ClrHome\Catalog;
 
 final class Mutation {
+  private int $firstByte;
+  private string $key;
+  private string $newValue;
+  private string $oldValue;
+  private ?int $secondByte;
+
   public function __construct(
-    private int $firstByte,
-    private int|null $secondByte,
-    private string $key,
-    private string $oldValue,
-    private string $newValue
-  ) {}
+    int $first_byte,
+    ?int $second_byte,
+    string $key,
+    string $old_value,
+    string $new_value
+  ) {
+    $this->firstByte = $first_byte;
+    $this->secondByte = $second_byte;
+    $this->key = $key;
+    $this->oldValue = $old_value;
+    $this->newValue = $new_value;
+  }
 
   public function toYaml() {
     $second_byte = $this->secondByte ?? 'null';

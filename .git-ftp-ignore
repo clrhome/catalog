@@ -4,5 +4,4 @@
 .gitignore
 .gitmodules
 Makefile
-lib/*
-src/*
+src/catalog.css
