@@ -80,7 +80,7 @@ final class Catalog {
     bool $pretty,
     bool $html
   ) {
-  	$space = $pretty ? ' ' : '';
+    $space = $pretty ? ' ' : '';
 
     return str_replace(
       array('&lt;', '&gt;', '&amp;'),
@@ -91,9 +91,9 @@ final class Catalog {
         preg_replace_callback(
           '/<token(.*?)>(.*?)<\/token>/s',
           function($token_matches) use ($pretty, $space) {
-          	preg_match('/^\n\s*/', $token_matches[2], $space_matches);
+            preg_match('/^\n\s*/', $token_matches[2], $space_matches);
 
-          	preg_match_all(
+            preg_match_all(
               '/ (([-\w]+)(:[-\w]+)?)=(".*?")/',
               $token_matches[1],
               $attribute_matches,
@@ -101,24 +101,24 @@ final class Catalog {
             );
 
             $token_content = $token_matches[2];
-          	$indent = $pretty && preg_match('/^\s*$/', $token_content)
+            $indent = $pretty && preg_match('/^\s*$/', $token_content)
               ? @"$space_matches[0]  "
               : @$space_matches[0];
 
-          	foreach ($attribute_matches as $attribute_match) {
-          		if (
+            foreach ($attribute_matches as $attribute_match) {
+              if (
                 $attribute_match[2] !== 'xmlns:' &&
                     $attribute_match[1] !== 'xmlns'
               ) {
-          			$token_content =
+                $token_content =
                     "$indent\"$attribute_match[1]\":$space$attribute_match[4],$token_content";
               }
             }
 
-          	return sprintf("{%s}", preg_replace_callback(
+            return sprintf("{%s}", preg_replace_callback(
               '/<(.*?)(>(.*?)<\/\1| ?\/)>/',
               function($tag_matches) use ($space) {
-              	return "\"$tag_matches[1]\":$space\"" .
+                return "\"$tag_matches[1]\":$space\"" .
                     str_replace('"', '\"', @$tag_matches[3]) . '",';
               }, $token_content
             ));
@@ -168,7 +168,7 @@ final class Catalog {
     $node = $this->catalog->firstChild;
 
     if ($first_byte !== null) {
-  		$node = $node->childNodes->item($first_byte);
+      $node = $node->childNodes->item($first_byte);
 
       if ($node === null) {
         throw new \UnexpectedValueException(sprintf(
@@ -178,7 +178,7 @@ final class Catalog {
       }
     }
 
-  	if ($second_byte !== null) {
+    if ($second_byte !== null) {
       if ($first_byte === null) {
         throw new \UnexpectedValueException(sprintf(
           'Second byte %s should not be set if first byte is null',
@@ -186,16 +186,16 @@ final class Catalog {
         ));
       }
 
-  		$node = $node->childNodes->item($second_byte);
+      $node = $node->childNodes->item($second_byte);
 
-  		if ($node === null || $node->nodeName !== 'token') {
+      if ($node === null || $node->nodeName !== 'token') {
         throw new \UnexpectedValueException(sprintf(
           'Unrecognized token %s%s',
           CatalogTable::formatByte($first_byte),
           CatalogTable::formatByte($second_byte)
         ));
-  		}
-  	}
+      }
+    }
 
     return $node;
   }
@@ -206,29 +206,29 @@ final class Catalog {
     bool $pretty,
     bool $html
   ) {
-  	$this->catalog->formatOutput = $pretty;
+    $this->catalog->formatOutput = $pretty;
     $node = $this->getNode($first_byte, $second_byte);
 
-  	foreach ($this->namespaceUris as $namespace => $uri) {
-  		$node->setAttribute(
+    foreach ($this->namespaceUris as $namespace => $uri) {
+      $node->setAttribute(
         $namespace === self::LANGUAGE_BASIC ? 'xmlns' : 'xmlns:' . $namespace,
         $uri
       );
     }
 
-  	$headless_xml = $this->catalog->saveXML($node);
+    $headless_xml = $this->catalog->saveXML($node);
 
-  	if ($this->language === self::LANGUAGE_BASIC) {
+    if ($this->language === self::LANGUAGE_BASIC) {
       $headless_xml = preg_replace(
         '/<([-\w]+:[-\w]+)(>.*?<\/\1| ?\/)>/',
         '',
         $headless_xml
       );
     } else {
-  		$headless_xml = preg_replace_callback(
+      $headless_xml = preg_replace_callback(
         '/<(([-\w]+:)?(syntax|description)(-\w)*)(>.*?<\/\1| ?\/)>/',
         function($matches) {
-        	return $matches[2] === $this->language . ':' ? $matches[0] : '';
+          return $matches[2] === $this->language . ':' ? $matches[0] : '';
         },
         $headless_xml
       );
@@ -236,7 +236,7 @@ final class Catalog {
 
     $headless_xml = preg_replace('/^\s*\n/m', '', $headless_xml);
 
-  	return $html ? preg_replace_callback(
+    return $html ? preg_replace_callback(
       '/<(([-\w]+:)?[-\w]+)>(.*?)<\/\1>/',
       function($matches) {
         return "<$matches[1]>" .
