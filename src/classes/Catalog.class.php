@@ -83,8 +83,8 @@ final class Catalog {
     $space = $pretty ? ' ' : '';
 
     return str_replace(
-      array('&lt;', '&gt;', '&amp;'),
-      array('<', '>', '&'),
+      array('&lt;', '&gt;', '&amp;', '\\x'),
+      array('<', '>', '&', '\\\\x'),
       preg_replace(
         '/,(\s*([\]\}]|$))/',
         '$1',
@@ -115,7 +115,7 @@ final class Catalog {
               }
             }
 
-            return sprintf("{%s}", preg_replace_callback(
+            return sprintf("{%s},", preg_replace_callback(
               '/<(.*?)(>(.*?)<\/\1| ?\/)>/',
               function($tag_matches) use ($space) {
                 return "\"$tag_matches[1]\":$space\"" .

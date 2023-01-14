@@ -37,8 +37,8 @@ $first_byte = is_numeric(@$_GET['i']) ? (int)$_GET['i'] : null;
 $second_byte = is_numeric(@$_GET['j']) ? (int)$_GET['j'] : null;
 
 if (array_key_exists('alt', $_GET)) {
-  $html = filter_var($_GET['html'], FILTER_VALIDATE_BOOLEAN);
-  $pretty = filter_var($_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
+  $html = filter_var(@$_GET['html'], FILTER_VALIDATE_BOOLEAN);
+  $pretty = filter_var(@$_GET['prettyprint'], FILTER_VALIDATE_BOOLEAN);
 
   switch ($_GET['alt']) {
     case 'json':
