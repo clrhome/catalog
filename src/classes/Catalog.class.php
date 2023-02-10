@@ -90,22 +90,22 @@ final class Catalog {
         '$1',
         preg_replace_callback(
           '/<token(.*?)>(.*?)<\/token>/s',
-          function($token_matches) use ($pretty, $space) {
-            preg_match('/^\n\s*/', $token_matches[2], $space_matches);
+          function($token_match) use ($pretty, $space) {
+            preg_match('/^\n\s*/', $token_match[2], $space_match);
 
             preg_match_all(
               '/ (([-\w]+)(:[-\w]+)?)=(".*?")/',
-              $token_matches[1],
-              $attribute_matches,
+              $token_match[1],
+              $attribute_sets,
               PREG_SET_ORDER
             );
 
-            $token_content = $token_matches[2];
+            $token_content = $token_match[2];
             $indent = $pretty && preg_match('/^\s*$/', $token_content)
-              ? @"$space_matches[0]  "
-              : @$space_matches[0];
+              ? @"$space_match[0]  "
+              : @$space_match[0];
 
-            foreach ($attribute_matches as $attribute_match) {
+            foreach ($attribute_sets as $attribute_match) {
               if (
                 $attribute_match[2] !== 'xmlns:' &&
                     $attribute_match[1] !== 'xmlns'
@@ -117,9 +117,9 @@ final class Catalog {
 
             return sprintf("{%s},", preg_replace_callback(
               '/<(.*?)(>(.*?)<\/\1| ?\/)>/',
-              function($tag_matches) use ($space) {
-                return "\"$tag_matches[1]\":$space\"" .
-                    str_replace('"', '\"', @$tag_matches[3]) . '",';
+              function($tag_match) use ($space) {
+                return "\"$tag_match[1]\":$space\"" .
+                    str_replace('"', '\"', @$tag_match[3]) . '",';
               }, $token_content
             ));
           },
@@ -227,8 +227,8 @@ final class Catalog {
     } else {
       $headless_xml = preg_replace_callback(
         '/<(([-\w]+:)?(syntax|description)(-\w)*)(>.*?<\/\1| ?\/)>/',
-        function($matches) {
-          return $matches[2] === $this->language . ':' ? $matches[0] : '';
+        function($match) {
+          return $match[2] === $this->language . ':' ? $match[0] : '';
         },
         $headless_xml
       );
@@ -238,10 +238,10 @@ final class Catalog {
 
     return $html ? preg_replace_callback(
       '/<(([-\w]+:)?[-\w]+)>(.*?)<\/\1>/',
-      function($matches) {
-        return "<$matches[1]>" .
-            CatalogTokenField::formatValue($matches[1], $matches[3]) .
-            "</$matches[1]>";
+      function($match) {
+        return "<$match[1]>" .
+            CatalogTokenField::formatValue($match[1], $match[3]) .
+            "</$match[1]>";
       },
       $headless_xml
     ) : $headless_xml;
