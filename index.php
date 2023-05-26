@@ -1,7 +1,7 @@
 <?
 namespace ClrHome;
 
-include(__DIR__ . '/lib/cleverly/Cleverly.class.php');
+include(__DIR__ . '/../lib/cleverly/Cleverly.class.php');
 include(__DIR__ . '/src/classes/Catalog.class.php');
 
 $language = @$_GET['lang'] ?: 'basic';

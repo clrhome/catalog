@@ -1,4 +1,4 @@
-squiffles:
+catalog:
 	postcss src/catalog.css --use autoprefixer > catalog.css
 
 clean:
