@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
-    <title>Token Catalog</title>
+    <title>Catalog - ClrHome</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link href="https://clrhome.org/logo.css" type="text/css" rel="stylesheet" />
     <link href="catalog.css" type="text/css" rel="stylesheet" />
     <script type="text/javascript" src="/lib/js/jquery.js"></script>
     <script type="text/javascript" src="/lib/js/ga.js"></script>
@@ -27,9 +28,9 @@
   </head>
   <body>
     <header>
-      <a>
-        <img src="/catalog/bar.png" alt="The Catalog: Online Token Reference" />
-      </a>
+      <h1>
+        <img src="/catalog/bar.png" alt="Catalog: Online Token Reference" />
+      </h1>
       <nav>
         <a href="/catalog/"{if $language eq 'basic'} class="active"{/if}>TI-BASIC</a>
         <a href="/catalog/axe/"{if $language eq 'axe'} class="active"{/if}>Axe</a>
@@ -45,10 +46,12 @@
       <input type="text" />
     </main>
     <footer>
-      <a href="/resources/">
-        <span>another resource by</span>
-        <img src="/images/emblem.png" alt="ClrHome" />
-      </a>
+      <h1 class="logo">
+        <a href="/resources/">
+          <span>another resource by</span>
+          <img src="/images/emblem.png" alt="ClrHome" />
+        </a>
+      </h1>
       <p>{if $language eq 'basic'}Guidebook used with permission from TI. <a href="http://education.ti.com/">http://education.ti.com/</a>{/if}{if $language eq 'axe'}Axe Parser Commands List used with permission from Quigibo.{/if}{if $language eq 'grammer'}Grammer Commands List used with permission from Xeda Elnara.{/if}</p>
       <p>Other content may be user-contributed.</p>
       <p>ClrHome makes no guarantees of accuracy of the information present on this page.</p>
