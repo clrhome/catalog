@@ -8,10 +8,17 @@ body {
   background-color: #00372b;
 }
 header,
-footer {
+footer,
+main::before,
+.gallery {
   box-shadow: 0 0 0.5em #00372b;
+}
+header,
+footer {
+  position: relative;
+  z-index: 1;
   padding: 1em 5%;
-  color: #627a74;
+  color: #62867e;
 }
 header h1 {
   float: left;
@@ -38,52 +45,77 @@ nav a {
 nav a:hover,
 nav a:focus,
 main {
-  border-style: solid;
   background-color: #0e5243;
 }
 nav a:hover,
 nav a:focus {
+  border-style: solid;
   color: #d3dad9;
 }
-nav a:active {
+nav a:active,
+nav a.active {
+  border-style: solid;
   background-color: #161919;
+}
+nav a:active {
   color: #86aea5;
 }
 nav a.active {
-  border-style: dotted;
-  background-color: #37534d;
   color: #d3dad9;
   cursor: default;
 }
 main {
+  position: relative;
   padding: 3em 5%;
 }
+main::before,
+.gallery {
+  border-radius: 0.5em;
+}
+main::before,
+input,
+.left a,
+.right {
+  border: 0 solid #37534d;
+  color: #2b3936;
+}
+main::before,
 input {
   display: block;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 1em;
-  border: 0.1em solid #86aea5;
-  border-radius: 0.32em;
+  position: absolute;
+  top: 1.4em;
+  right: 5%;
+  margin-right: 1em;
+  width: 12em;
+  height: 1.2em;
+  border-width: 1px;
   padding: 0.3em 0.4em;
-  background-color: #d3dad9;
-  color: #455;
+  font-size: 1.25em;
+  line-height: 1.2;
+}
+main::before {
+  content: "";
+}
+input {
+  z-index: 2;
+  border-radius: 0.4em;
+  background-color: #a6c3bc;
   outline: 0;
-  font-size: 2em;
 }
 input:hover,
 input:focus {
   border-color: #44897a;
 }
-input.green:focus {
-  border-color: #cec;
+input.green {
+  background-color: #daeeb7;
 }
-input.red:focus {
-  border-color: #ecc;
+input.red {
+  background-color: #ffdac4;
 }
 .gallery {
+  position: relative;
+  z-index: 1;
   overflow: auto;
-  border-radius: 0.5em;
 }
 .gallery > div {
   min-width: 48em;
@@ -105,12 +137,11 @@ input.red:focus {
 }
 .left a {
   display: block;
-  border-top: 0.2em solid #0e5243;
+  border-top-width: 1px;
   padding: 0.5em 1em;
   font-size: 0.8em;
   font-weight: bold;
   text-decoration: none;
-  color: #2b3936;
   cursor: default;
 }
 .right .left a {
@@ -141,9 +172,8 @@ input.red:focus {
   content: "\25B7";
 }
 .right {
-  border-left: 0.1em solid #0e5243;
+  border-left-width: 1px;
   background-color: #d3dad9;
-  color: #37534d;
 }
 .right,
 .right .right {
@@ -169,23 +199,23 @@ dd.keys {
   font-family: monospace;
 }
 kbd {
-  background-color: #334;
-  color: #def;
+  background-color: #2b3936;
+  color: #d3dad9;
 }
 kbd.second {
-  background-color: #c93;
+  background-color: #aa6439;
 }
 kbd.alpha {
-  background-color: #399;
+  background-color: #44897a;
 }
 mark {
   background-color: transparent;
 }
 .second + mark {
-  color: #c93;
+  color: #803e15;
 }
 .alpha + mark {
-  color: #399;
+  color: #256e5e;
 }
 textarea {
   width: 100%;
@@ -220,8 +250,8 @@ p a:hover,
 p a:focus {
   text-decoration: underline;
 }
-a.hidden,
-div.hidden {
+a.unmatched,
+div.unmatched {
   display: none;
 }
 @media screen and (max-width: 479px) {
