@@ -65,6 +65,7 @@ $cleverly->preserveIndent = true;
 $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 
 $cleverly->display('index.tpl', [
+  'date' => strftime('%F'),
   'editable' => true,
   'emptyMessage' => CatalogTokenField::EMPTY_MESSAGE,
   'language' => $language,

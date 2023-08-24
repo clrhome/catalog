@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link href="https://clrhome.org/logo.css" type="text/css" rel="stylesheet" />
-    <link href="catalog.css" type="text/css" rel="stylesheet" />
+    <link href="catalog.css?v={$date}" type="text/css" rel="stylesheet" />
     <script type="text/javascript" src="/lib/js/jquery.js"></script>
     <script type="text/javascript" src="/lib/js/ga.js"></script>
     <script type="text/javascript">// <![CDATA[
@@ -24,7 +24,7 @@
         });
       });
 {/if}    // ]]></script>
-    <script type="text/javascript" src="bin/js/catalog.js"></script>
+    <script type="text/javascript" src="bin/js/catalog.js?v={$date}"></script>
   </head>
   <body>
     <header>

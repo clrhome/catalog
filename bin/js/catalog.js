@@ -1,5 +1,12 @@
 const ACTIVE_CLASS = "active";
 const UNMATCHED_CLASS = "unmatched";
+const SEARCH_BAR_PLACEHOLDER = "type to search\u2026 (/)";
+const SEARCH_TIMEOUT = 200;
+
+function cancel(event) {
+  event.preventDefault();
+  event.stopPropagation();
+}
 
 function classRegExp(className) {
   return new RegExp("\\s*" + className + "\\b");
@@ -15,25 +22,25 @@ function filterLeft(left, query) {
   ) {
     const leftChild = left.childNodes.item(leftChildIndex);
 
-    if (leftChild.nodeName === "A") {
+    if (leftChild.nodeType === Node.ELEMENT_NODE) {
       let leftMatchCount = 0;
 
-      const right = document.getElementById(
+      const target = document.getElementById(
         leftChild.getAttribute("href").slice(1)
       );
 
       for (
-        let rightChildIndex = 0;
-        rightChildIndex < right.childNodes.length;
-        rightChildIndex++
+        let targetChildIndex = 0;
+        targetChildIndex < target.childNodes.length;
+        targetChildIndex++
       ) {
-        const rightChild = right.childNodes.item(rightChildIndex);
+        const targetChild = target.childNodes.item(targetChildIndex);
 
         if (
-          rightChild.nodeType === Node.ELEMENT_NODE &&
-          /\bleft\b/.test(rightChild.className)
+          targetChild.nodeType === Node.ELEMENT_NODE &&
+          hasClass(targetChild, "left")
         ) {
-          leftMatchCount += filterLeft(rightChild, query);
+          leftMatchCount += filterLeft(targetChild, query);
           break;
         }
       }
@@ -48,7 +55,7 @@ function filterLeft(left, query) {
       const unmatched = leftMatchCount === 0;
 
       toggleClass(leftChild, UNMATCHED_CLASS, unmatched);
-      toggleClass(right, UNMATCHED_CLASS, unmatched);
+      toggleClass(target, UNMATCHED_CLASS, unmatched);
 
       if (!unmatched) {
         matchCount += leftMatchCount;
@@ -63,43 +70,67 @@ function hasClass(element, className) {
   return classRegExp(className).test(element.className);
 }
 
-function toggleClass(element, className, value) {
-  element.className = element.className.replace(classRegExp(className), "");
-
-  if (value) {
-    element.className += " " + className;
-  }
-}
-
 function initializeSearch() {
   let activeEntries = [];
-  const divs = document.getElementsByTagName("div");
-  let gallery;
+  const lefts = document.getElementsByClassName("left");
   const entries = {};
+  const gallery = document.getElementsByClassName("gallery").item(0);
+  const rootLeft = lefts.item(0);
+  const searchBar = document.createElement("input");
   let searchTimeout = 0;
 
   function clearActiveEntries() {
+    clearActiveEntriesWithoutUpdatingHash();
+    window.location.hash = "";
+  }
+
+  function clearActiveEntriesWithoutUpdatingHash() {
     for (let entryIndex = 0; entryIndex < activeEntries.length; entryIndex++) {
       toggleClass(activeEntries[entryIndex], ACTIVE_CLASS, false);
+    }
+
+    for (
+      let activeEntryIndex = 0;
+      activeEntryIndex < activeEntries.length;
+      activeEntryIndex++
+    ) {
+      const target = document.getElementById(
+        activeEntries[activeEntryIndex].getAttribute("href").slice(1)
+      );
+
+      if (target != null) {
+        target.parentNode.scrollTop = 0;
+      }
     }
 
     activeEntries = [];
   }
 
-  function handleMouseDown(event) {
-    selectEntry(event.target);
-    event.preventDefault();
-    event.stopPropagation();
-  }
+  function search() {
+    if (searchBar.value.length !== 0) {
+      searchBar.className =
+        filterLeft(rootLeft, searchBar.value.toLowerCase()) !== 0
+          ? "green"
+          : "red";
+    } else {
+      searchBar.className = "";
 
-  function scrollLeft() {
-    gallery.scrollLeft = 0;
+      for (const href in entries) {
+        toggleClass(entries[href], UNMATCHED_CLASS, false);
+        toggleClass(
+          document.getElementById(href.slice(1)),
+          UNMATCHED_CLASS,
+          false
+        );
+      }
+    }
   }
 
   function selectEntry(entry) {
     const href = entry.getAttribute("href");
+    let url = "";
 
-    clearActiveEntries();
+    clearActiveEntriesWithoutUpdatingHash();
 
     for (let hrefBreak = 4; hrefBreak <= href.length; hrefBreak += 2) {
       const partialEntry = entries[href.slice(0, hrefBreak)];
@@ -108,162 +139,225 @@ function initializeSearch() {
       partialEntry.blur();
       toggleClass(partialEntry, "active", true);
       activeEntries.push(partialEntry);
+      url += parseInt(href.slice(hrefBreak - 2, hrefBreak), 16) + "/";
     }
 
-    window.setTimeout(scrollLeft, 0);
+    const dts = document
+      .getElementById(href.slice(1))
+      .getElementsByTagName("dt");
+
+    if (dts.length !== 0) {
+      const request = new XMLHttpRequest();
+
+      request.onload = function (event) {
+        const response = JSON.parse(request.response);
+
+        for (let dtIndex = 0; dtIndex < dts.length; dtIndex++) {
+          const dt = dts.item(dtIndex);
+          const key = dt.innerHTML.toLowerCase();
+
+          if (key in response) {
+            let sibling;
+
+            for (
+              sibling = dt.nextSibling;
+              sibling != null && sibling.nodeType !== Node.ELEMENT_NODE;
+              sibling = sibling.nextSibling
+            );
+
+            if (sibling != null) {
+              sibling.innerHTML =
+                response[key].length !== 0 ? response[key] : EMPTY_MESSAGE;
+            }
+          }
+        }
+      };
+
+      request.open(
+        "GET",
+        url + "?alt=json&html=1&v=" + new Date().getTime(),
+        true
+      );
+
+      request.send();
+    }
+
     window.location.href = href;
   }
 
-  for (let divIndex = 0; divIndex < divs.length; divIndex++) {
-    const div = divs.item(divIndex);
+  function selectEntryAndCancel(event) {
+    selectEntry(event.target);
+    cancel(event);
+  }
 
-    if (hasClass(div, "gallery")) {
-      gallery = div;
-    } else if (hasClass(div, "left")) {
-      divEntries = div.getElementsByTagName("a");
+  for (let leftIndex = 0; leftIndex < lefts.length; leftIndex++) {
+    const leftEntries = lefts.item(leftIndex).getElementsByTagName("a");
 
-      for (
-        let divEntryIndex = 0;
-        divEntryIndex < divEntries.length;
-        divEntryIndex++
-      ) {
-        const divEntry = divEntries.item(divEntryIndex);
+    for (
+      let leftEntryIndex = 0;
+      leftEntryIndex < leftEntries.length;
+      leftEntryIndex++
+    ) {
+      const leftEntry = leftEntries.item(leftEntryIndex);
 
-        divEntry.onmousedown = handleMouseDown;
-        entries[divEntry.getAttribute("href")] = divEntry;
-      }
+      leftEntry.onclick = cancel;
+      leftEntry.onmousedown = selectEntryAndCancel;
+      entries[leftEntry.getAttribute("href")] = leftEntry;
     }
   }
 
-  $(".left a")
-    .mousedown(function () {
-      var e = $(this).attr("href");
-      var f = $(e);
-      if (f.children("dl").length) {
-        $.get(
-          parseInt(e.slice(2, 4), 16) +
-            (e.length > 4 ? "/" + parseInt(e.slice(4, 6), 16) : "") +
-            "/?alt=json&html=1&" +
-            new Date().getTime(),
-          function (e, f, g) {
-            g.target
-              .children()
-              .children("dt")
-              .each(function () {
-                var k = $(this).html().toLowerCase();
+  searchBar.placeholder = SEARCH_BAR_PLACEHOLDER;
+  document.getElementsByTagName("main").item(0).appendChild(searchBar);
 
-                if (k in e)
-                  $(this)
-                    .next()
-                    .html(e[k] ? e[k] : EMPTY_MESSAGE);
-              });
+  document.onkeydown = function (event) {
+    switch (event.key) {
+      case "/":
+        searchBar.focus();
+        searchBar.select();
+        cancel(event);
+        break;
+      case "ArrowDown":
+      case "j":
+        if (activeEntries.length >= 1) {
+          let sibling;
+
+          for (
+            sibling = activeEntries[activeEntries.length - 1].nextSibling;
+            sibling != null &&
+            (sibling.nodeType !== Node.ELEMENT_NODE ||
+              hasClass(sibling, UNMATCHED_CLASS));
+            sibling = sibling.nextSibling
+          );
+
+          if (sibling != null) {
+            selectEntry(sibling);
           }
-        ).target = f;
-      }
-    })
-    .click(false);
-
-  $(document)
-    .keydown(function (e) {
-      if ($("textarea").length) {
-        if (e.keyCode == 9 || e.keyCode == 13 || e.keyCode == 27) {
-          $("textarea").blur();
-          return false;
         }
 
-        return true;
-      }
+        cancel(event);
+        break;
+      case "ArrowLeft":
+      case "h":
+        if (activeEntries.length >= 2) {
+          selectEntry(activeEntries[activeEntries.length - 2]);
+        } else {
+          clearActiveEntries();
+        }
 
-      var f = $(".left a.active");
+        cancel(event);
+        break;
+      case "ArrowRight":
+      case "l":
+        const left =
+          activeEntries.length >= 1
+            ? document
+                .getElementById(
+                  activeEntries[activeEntries.length - 1]
+                    .getAttribute("href")
+                    .slice(1)
+                )
+                .getElementsByClassName("left")
+                .item(0)
+            : rootLeft;
 
-      switch (e.keyCode) {
-        case 27:
-        case 37:
-          if (f.length == 2) {
-            f.first().mousedown();
-            return false;
+        if (left != null) {
+          for (
+            let leftChildIndex = 0;
+            leftChildIndex < left.childNodes.length;
+            leftChildIndex++
+          ) {
+            const leftChild = left.childNodes.item(leftChildIndex);
+
+            if (
+              leftChild.nodeType === Node.ELEMENT_NODE &&
+              !hasClass(leftChild, UNMATCHED_CLASS)
+            ) {
+              selectEntry(leftChild);
+              break;
+            }
           }
+        }
 
-          window.location.hash = "";
-          return false;
-        case 40:
-        case 74:
-          if (f.length) {
-            f = f.last();
-            var g = f.nextUntil(":not(.unmatched)");
-            f = g.length ? g.last().next() : f.next();
+        cancel(event);
+        break;
+      case "ArrowUp":
+      case "k":
+        if (activeEntries.length >= 1) {
+          let sibling;
 
-            if (f.length) f.mousedown();
-
-            return false;
-          }
-        case 13:
-        case 39:
-          if (!f.length) {
-            $(".left a:not(.unmatched)").first().mousedown();
-            return false;
-          }
-
-          $(f.attr("href") + " .left a:not(.unmatched)")
-            .first()
-            .mousedown();
-          return false;
-        case 38:
-        case 75:
-          if (!f.length) {
-            $(".left").first().children("a:not(.unmatched)").last().mousedown();
-            return false;
-          }
-
-          f = f.last();
-          var g = f.prevUntil(":not(.unmatched)");
-          f = g.length ? g.last().prev() : f.prev();
-
-          if (f.length) f.mousedown();
-
-          return false;
-        case 191:
-          $("input").focus().select();
-          return false;
-      }
-    })
-    .bind("touchstart", function () {});
-
-  $("input")
-    .attr("placeholder", "type to search\u2026 (/)")
-    .keydown(function (e) {
-      e.stopPropagation();
-
-      if (e.keyCode == 27) $(this).blur();
-    })
-    .keyup(function () {
-      clearTimeout(u);
-
-      u = setTimeout(function () {
-        var e = $("input").removeClass("red green").val().toLowerCase();
-        window.location.hash = "";
-
-        if (e.length)
-          $("input").addClass(
-            filterLeft($(".gallery > div > div > .left")[0], e)
-              ? "green"
-              : "red"
+          for (
+            sibling = activeEntries[activeEntries.length - 1].previousSibling;
+            sibling != null &&
+            (sibling.nodeType !== Node.ELEMENT_NODE ||
+              hasClass(sibling, UNMATCHED_CLASS));
+            sibling = sibling.previousSibling
           );
-        else $(".unmatched").removeClass("unmatched");
-      }, 100);
-    });
 
-  window.onhashchange = function () {
-    if (window.location.hash.length <= 2) {
-      clearActiveEntries();
-    } else {
-      if (!hasClass(entries[window.location.hash], "active")) {
-        selectEntry(entries[window.location.hash]);
+          if (sibling != null) {
+            selectEntry(sibling);
+          }
+        }
+
+        cancel(event);
+        break;
+    }
+
+    if ($("textarea").length) {
+      if (e.keyCode == 9 || e.keyCode == 13 || e.keyCode == 27) {
+        $("textarea").blur();
+        return false;
       }
+
+      return true;
     }
   };
 
+  document.ontouchstart = function () {};
+
+  searchBar.onkeydown = function (event) {
+    switch (event.key) {
+      case "/":
+      case "ArrowDown":
+      case "ArrowLeft":
+      case "ArrowRight":
+      case "ArrowUp":
+      case "h":
+      case "j":
+      case "k":
+      case "l":
+        event.stopPropagation();
+        break;
+      case "Escape":
+        searchBar.blur();
+        cancel(event);
+        break;
+    }
+  };
+
+  searchBar.onkeyup = function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(search, SEARCH_TIMEOUT);
+  };
+
+  window.onhashchange = function (event) {
+    if (window.location.hash.length <= 2) {
+      clearActiveEntries();
+    } else if (!hasClass(entries[window.location.hash], "active")) {
+      selectEntry(entries[window.location.hash]);
+    }
+
+    cancel(event);
+  };
+
   window.onhashchange(document.createEvent("HashChangeEvent"));
+}
+
+function toggleClass(element, className, value) {
+  element.className = element.className.replace(classRegExp(className), "");
+
+  if (value) {
+    element.className += " " + className;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initializeSearch);
