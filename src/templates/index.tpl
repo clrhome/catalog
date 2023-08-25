@@ -8,24 +8,9 @@
     <link href="catalog.css?v={$date}" type="text/css" rel="stylesheet" />
     <script type="text/javascript" src="/lib/js/jquery.js"></script>
     <script type="text/javascript" src="/lib/js/ga.js"></script>
-    <script type="text/javascript">// <![CDATA[
-{if $editable}      $(function() {
-        $('.right dd').dblclick(function() {
-          $(this).html('<textarea>' + $(this).text() + '</textarea>').children().focus().select().blur(function() {
-            var e = $('.left a.active').last().attr('href');
-            b = $(this);
-            var k = {i: parseInt(e.slice(2, 4), 16), j: parseInt(e.slice(4, 6), 16)};
-            k[$(this).parent().prev().html()] = $(this).val();
-
-            $.post('./', k, function(e) {
-              b.parent().html(e);
-            });
-          }).dblclick(false);
-        });
-      });
-{/if}    // ]]></script>
     <script type="text/javascript" src="bin/js/catalog.js?v={$date}"></script>
-  </head>
+{if $editable}    <script type="text/javascript" src="bin/js/catalog-edit.js?v={$date}"></script>
+{/if}  </head>
   <body>
     <header>
       <h1>

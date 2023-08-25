@@ -8,8 +8,8 @@ $language = @$_GET['lang'] ?: 'basic';
 $catalog = new Catalog($language);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  $first_byte = is_numeric(@$_POST['i']) ? (int)$_POST['i'] : null;
-  $second_byte = is_numeric(@$_POST['j']) ? (int)$_POST['j'] : null;
+  $first_byte = is_numeric(@$_REQUEST['i']) ? (int)$_REQUEST['i'] : null;
+  $second_byte = is_numeric(@$_REQUEST['j']) ? (int)$_REQUEST['j'] : null;
   $key = '';
   $sanitized_value = '';
 

@@ -3,10 +3,20 @@ const UNMATCHED_CLASS = "unmatched";
 const SEARCH_BAR_PLACEHOLDER = "type to search\u2026 (/)";
 const SEARCH_TIMEOUT = 200;
 
-function cancel(event) {
+window.catalogCancel = function (event) {
   event.preventDefault();
   event.stopPropagation();
-}
+};
+
+window.catalogTokenUrl = function (href) {
+  let url = "";
+
+  for (let hrefBreak = 4; hrefBreak <= href.length; hrefBreak += 2) {
+    url += parseInt(href.slice(hrefBreak - 2, hrefBreak), 16) + "/";
+  }
+
+  return url;
+};
 
 function classRegExp(className) {
   return new RegExp("\\s*" + className + "\\b");
@@ -17,49 +27,43 @@ function filterLeft(left, query) {
 
   for (
     let leftChildIndex = 0;
-    leftChildIndex < left.childNodes.length;
+    leftChildIndex < left.children.length;
     leftChildIndex++
   ) {
-    const leftChild = left.childNodes.item(leftChildIndex);
+    const leftChild = left.children.item(leftChildIndex);
+    let leftMatchCount = 0;
 
-    if (leftChild.nodeType === Node.ELEMENT_NODE) {
-      let leftMatchCount = 0;
+    const target = document.getElementById(
+      leftChild.getAttribute("href").slice(1)
+    );
 
-      const target = document.getElementById(
-        leftChild.getAttribute("href").slice(1)
-      );
+    for (
+      let targetChildIndex = 0;
+      targetChildIndex < target.children.length;
+      targetChildIndex++
+    ) {
+      const targetChild = target.children.item(targetChildIndex);
 
-      for (
-        let targetChildIndex = 0;
-        targetChildIndex < target.childNodes.length;
-        targetChildIndex++
-      ) {
-        const targetChild = target.childNodes.item(targetChildIndex);
-
-        if (
-          targetChild.nodeType === Node.ELEMENT_NODE &&
-          hasClass(targetChild, "left")
-        ) {
-          leftMatchCount += filterLeft(targetChild, query);
-          break;
-        }
+      if (hasClass(targetChild, "left")) {
+        leftMatchCount += filterLeft(targetChild, query);
+        break;
       }
+    }
 
-      if (
-        leftMatchCount === 0 &&
-        leftChild.innerText.toLowerCase().indexOf(query) !== -1
-      ) {
-        leftMatchCount = 1;
-      }
+    if (
+      leftMatchCount === 0 &&
+      leftChild.innerText.toLowerCase().indexOf(query) !== -1
+    ) {
+      leftMatchCount = 1;
+    }
 
-      const unmatched = leftMatchCount === 0;
+    const unmatched = leftMatchCount === 0;
 
-      toggleClass(leftChild, UNMATCHED_CLASS, unmatched);
-      toggleClass(target, UNMATCHED_CLASS, unmatched);
+    toggleClass(leftChild, UNMATCHED_CLASS, unmatched);
+    toggleClass(target, UNMATCHED_CLASS, unmatched);
 
-      if (!unmatched) {
-        matchCount += leftMatchCount;
-      }
+    if (!unmatched) {
+      matchCount += leftMatchCount;
     }
   }
 
@@ -71,7 +75,8 @@ function hasClass(element, className) {
 }
 
 function initializeSearch() {
-  let activeEntries = [];
+  window.catalogActiveEntries = [];
+
   const lefts = document.getElementsByClassName("left");
   const entries = {};
   const gallery = document.getElementsByClassName("gallery").item(0);
@@ -85,17 +90,23 @@ function initializeSearch() {
   }
 
   function clearActiveEntriesWithoutUpdatingHash() {
-    for (let entryIndex = 0; entryIndex < activeEntries.length; entryIndex++) {
-      toggleClass(activeEntries[entryIndex], ACTIVE_CLASS, false);
+    for (
+      let entryIndex = 0;
+      entryIndex < window.catalogActiveEntries.length;
+      entryIndex++
+    ) {
+      toggleClass(window.catalogActiveEntries[entryIndex], ACTIVE_CLASS, false);
     }
 
     for (
       let activeEntryIndex = 0;
-      activeEntryIndex < activeEntries.length;
+      activeEntryIndex < window.catalogActiveEntries.length;
       activeEntryIndex++
     ) {
       const target = document.getElementById(
-        activeEntries[activeEntryIndex].getAttribute("href").slice(1)
+        window.catalogActiveEntries[activeEntryIndex]
+          .getAttribute("href")
+          .slice(1)
       );
 
       if (target != null) {
@@ -103,7 +114,7 @@ function initializeSearch() {
       }
     }
 
-    activeEntries = [];
+    window.catalogActiveEntries = [];
   }
 
   function search() {
@@ -117,6 +128,7 @@ function initializeSearch() {
 
       for (const href in entries) {
         toggleClass(entries[href], UNMATCHED_CLASS, false);
+
         toggleClass(
           document.getElementById(href.slice(1)),
           UNMATCHED_CLASS,
@@ -128,7 +140,6 @@ function initializeSearch() {
 
   function selectEntry(entry) {
     const href = entry.getAttribute("href");
-    let url = "";
 
     clearActiveEntriesWithoutUpdatingHash();
 
@@ -138,8 +149,7 @@ function initializeSearch() {
       partialEntry.focus();
       partialEntry.blur();
       toggleClass(partialEntry, "active", true);
-      activeEntries.push(partialEntry);
-      url += parseInt(href.slice(hrefBreak - 2, hrefBreak), 16) + "/";
+      window.catalogActiveEntries.push(partialEntry);
     }
 
     const dts = document
@@ -156,26 +166,18 @@ function initializeSearch() {
           const dt = dts.item(dtIndex);
           const key = dt.innerHTML.toLowerCase();
 
-          if (key in response) {
-            let sibling;
-
-            for (
-              sibling = dt.nextSibling;
-              sibling != null && sibling.nodeType !== Node.ELEMENT_NODE;
-              sibling = sibling.nextSibling
-            );
-
-            if (sibling != null) {
-              sibling.innerHTML =
-                response[key].length !== 0 ? response[key] : EMPTY_MESSAGE;
-            }
+          if (key in response && dt.nextElementSibling != null) {
+            dt.nextElementSibling.innerHTML =
+              response[key].length !== 0 ? response[key] : EMPTY_MESSAGE;
           }
         }
       };
 
       request.open(
         "GET",
-        url + "?alt=json&html=1&v=" + new Date().getTime(),
+        window.catalogTokenUrl(href) +
+          "?alt=json&html=1&v=" +
+          new Date().getTime(),
         true
       );
 
@@ -187,7 +189,7 @@ function initializeSearch() {
 
   function selectEntryAndCancel(event) {
     selectEntry(event.target);
-    cancel(event);
+    window.catalogCancel(event);
   }
 
   for (let leftIndex = 0; leftIndex < lefts.length; leftIndex++) {
@@ -200,7 +202,7 @@ function initializeSearch() {
     ) {
       const leftEntry = leftEntries.item(leftEntryIndex);
 
-      leftEntry.onclick = cancel;
+      leftEntry.onclick = window.catalogCancel;
       leftEntry.onmousedown = selectEntryAndCancel;
       entries[leftEntry.getAttribute("href")] = leftEntry;
     }
@@ -214,45 +216,43 @@ function initializeSearch() {
       case "/":
         searchBar.focus();
         searchBar.select();
-        cancel(event);
+        window.catalogCancel(event);
         break;
       case "ArrowDown":
       case "j":
-        if (activeEntries.length >= 1) {
-          let sibling;
-
-          for (
-            sibling = activeEntries[activeEntries.length - 1].nextSibling;
-            sibling != null &&
-            (sibling.nodeType !== Node.ELEMENT_NODE ||
-              hasClass(sibling, UNMATCHED_CLASS));
-            sibling = sibling.nextSibling
-          );
+        if (window.catalogActiveEntries.length >= 1) {
+          const sibling =
+            window.catalogActiveEntries[window.catalogActiveEntries.length - 1]
+              .nextElementSibling;
 
           if (sibling != null) {
             selectEntry(sibling);
           }
         }
 
-        cancel(event);
+        window.catalogCancel(event);
         break;
       case "ArrowLeft":
       case "h":
-        if (activeEntries.length >= 2) {
-          selectEntry(activeEntries[activeEntries.length - 2]);
+        if (window.catalogActiveEntries.length >= 2) {
+          selectEntry(
+            window.catalogActiveEntries[window.catalogActiveEntries.length - 2]
+          );
         } else {
           clearActiveEntries();
         }
 
-        cancel(event);
+        window.catalogCancel(event);
         break;
       case "ArrowRight":
       case "l":
         const left =
-          activeEntries.length >= 1
+          window.catalogActiveEntries.length >= 1
             ? document
                 .getElementById(
-                  activeEntries[activeEntries.length - 1]
+                  window.catalogActiveEntries[
+                    window.catalogActiveEntries.length - 1
+                  ]
                     .getAttribute("href")
                     .slice(1)
                 )
@@ -263,52 +263,34 @@ function initializeSearch() {
         if (left != null) {
           for (
             let leftChildIndex = 0;
-            leftChildIndex < left.childNodes.length;
+            leftChildIndex < left.children.length;
             leftChildIndex++
           ) {
-            const leftChild = left.childNodes.item(leftChildIndex);
+            const leftChild = left.children.item(leftChildIndex);
 
-            if (
-              leftChild.nodeType === Node.ELEMENT_NODE &&
-              !hasClass(leftChild, UNMATCHED_CLASS)
-            ) {
+            if (!hasClass(leftChild, UNMATCHED_CLASS)) {
               selectEntry(leftChild);
               break;
             }
           }
         }
 
-        cancel(event);
+        window.catalogCancel(event);
         break;
       case "ArrowUp":
       case "k":
-        if (activeEntries.length >= 1) {
-          let sibling;
-
-          for (
-            sibling = activeEntries[activeEntries.length - 1].previousSibling;
-            sibling != null &&
-            (sibling.nodeType !== Node.ELEMENT_NODE ||
-              hasClass(sibling, UNMATCHED_CLASS));
-            sibling = sibling.previousSibling
-          );
+        if (window.catalogActiveEntries.length >= 1) {
+          const sibling =
+            window.catalogActiveEntries[window.catalogActiveEntries.length - 1]
+              .previousElementSibling;
 
           if (sibling != null) {
             selectEntry(sibling);
           }
         }
 
-        cancel(event);
+        window.catalogCancel(event);
         break;
-    }
-
-    if ($("textarea").length) {
-      if (e.keyCode == 9 || e.keyCode == 13 || e.keyCode == 27) {
-        $("textarea").blur();
-        return false;
-      }
-
-      return true;
     }
   };
 
@@ -329,7 +311,7 @@ function initializeSearch() {
         break;
       case "Escape":
         searchBar.blur();
-        cancel(event);
+        window.catalogCancel(event);
         break;
     }
   };
@@ -346,7 +328,7 @@ function initializeSearch() {
       selectEntry(entries[window.location.hash]);
     }
 
-    cancel(event);
+    window.catalogCancel(event);
   };
 
   window.onhashchange(document.createEvent("HashChangeEvent"));
