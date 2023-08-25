@@ -3,12 +3,15 @@ const UNMATCHED_CLASS = "unmatched";
 const SEARCH_BAR_PLACEHOLDER = "type to search\u2026 (/)";
 const SEARCH_TIMEOUT = 200;
 
-window.catalogCancel = function (event) {
+window.catalogCancel = function (
+  this: GlobalEventHandlers,
+  event: Event
+): void {
   event.preventDefault();
   event.stopPropagation();
 };
 
-window.catalogTokenUrl = function (href) {
+window.catalogTokenUrl = function (href: string): string {
   let url = "";
 
   for (let hrefBreak = 4; hrefBreak <= href.length; hrefBreak += 2) {
@@ -18,11 +21,11 @@ window.catalogTokenUrl = function (href) {
   return url;
 };
 
-function classRegExp(className) {
+function classRegExp(className: string): RegExp {
   return new RegExp("\\s*" + className + "\\b");
 }
 
-function filterLeft(left, query) {
+function filterLeft(left: Element, query: string): number {
   let matchCount = 0;
 
   for (
@@ -30,19 +33,19 @@ function filterLeft(left, query) {
     leftChildIndex < left.children.length;
     leftChildIndex++
   ) {
-    const leftChild = left.children.item(leftChildIndex);
+    const leftChild = left.children.item(leftChildIndex)!;
     let leftMatchCount = 0;
 
     const target = document.getElementById(
-      leftChild.getAttribute("href").slice(1)
-    );
+      leftChild.getAttribute("href")!.slice(1)
+    )!;
 
     for (
       let targetChildIndex = 0;
       targetChildIndex < target.children.length;
       targetChildIndex++
     ) {
-      const targetChild = target.children.item(targetChildIndex);
+      const targetChild = target.children.item(targetChildIndex)!;
 
       if (hasClass(targetChild, "left")) {
         leftMatchCount += filterLeft(targetChild, query);
@@ -52,7 +55,8 @@ function filterLeft(left, query) {
 
     if (
       leftMatchCount === 0 &&
-      leftChild.innerText.toLowerCase().indexOf(query) !== -1
+      leftChild.textContent != null &&
+      leftChild.textContent.toLowerCase().indexOf(query) !== -1
     ) {
       leftMatchCount = 1;
     }
@@ -70,26 +74,26 @@ function filterLeft(left, query) {
   return matchCount;
 }
 
-function hasClass(element, className) {
+function hasClass(element: Element, className: string): boolean {
   return classRegExp(className).test(element.className);
 }
 
-function initializeSearch() {
+function initializeSearch(): void {
   window.catalogActiveEntries = [];
 
   const lefts = document.getElementsByClassName("left");
-  const entries = {};
+  const entries: Record<string, HTMLAnchorElement> = {};
   const gallery = document.getElementsByClassName("gallery").item(0);
-  const rootLeft = lefts.item(0);
+  const rootLeft = lefts.item(0)!;
   const searchBar = document.createElement("input");
   let searchTimeout = 0;
 
-  function clearActiveEntries() {
+  function clearActiveEntries(): void {
     clearActiveEntriesWithoutUpdatingHash();
     window.location.hash = "";
   }
 
-  function clearActiveEntriesWithoutUpdatingHash() {
+  function clearActiveEntriesWithoutUpdatingHash(): void {
     for (
       let entryIndex = 0;
       entryIndex < window.catalogActiveEntries.length;
@@ -103,21 +107,17 @@ function initializeSearch() {
       activeEntryIndex < window.catalogActiveEntries.length;
       activeEntryIndex++
     ) {
-      const target = document.getElementById(
+      document.getElementById(
         window.catalogActiveEntries[activeEntryIndex]
-          .getAttribute("href")
+          .getAttribute("href")!
           .slice(1)
-      );
-
-      if (target != null) {
-        target.parentNode.scrollTop = 0;
-      }
+      )!.parentElement!.scrollTop = 0;
     }
 
     window.catalogActiveEntries = [];
   }
 
-  function search() {
+  function search(): void {
     if (searchBar.value.length !== 0) {
       searchBar.className =
         filterLeft(rootLeft, searchBar.value.toLowerCase()) !== 0
@@ -130,7 +130,7 @@ function initializeSearch() {
         toggleClass(entries[href], UNMATCHED_CLASS, false);
 
         toggleClass(
-          document.getElementById(href.slice(1)),
+          document.getElementById(href.slice(1))!,
           UNMATCHED_CLASS,
           false
         );
@@ -138,8 +138,8 @@ function initializeSearch() {
     }
   }
 
-  function selectEntry(entry) {
-    const href = entry.getAttribute("href");
+  function selectEntry(entry: Element): void {
+    const href = entry.getAttribute("href")!;
 
     clearActiveEntriesWithoutUpdatingHash();
 
@@ -153,22 +153,21 @@ function initializeSearch() {
     }
 
     const dts = document
-      .getElementById(href.slice(1))
+      .getElementById(href.slice(1))!
       .getElementsByTagName("dt");
 
     if (dts.length !== 0) {
       const request = new XMLHttpRequest();
 
-      request.onload = function (event) {
+      request.onload = function (event: Event) {
         const response = JSON.parse(request.response);
 
         for (let dtIndex = 0; dtIndex < dts.length; dtIndex++) {
-          const dt = dts.item(dtIndex);
+          const dt = dts.item(dtIndex)!;
           const key = dt.innerHTML.toLowerCase();
 
           if (key in response && dt.nextElementSibling != null) {
-            dt.nextElementSibling.innerHTML =
-              response[key].length !== 0 ? response[key] : EMPTY_MESSAGE;
+            dt.nextElementSibling.innerHTML = response[key];
           }
         }
       };
@@ -187,31 +186,34 @@ function initializeSearch() {
     window.location.href = href;
   }
 
-  function selectEntryAndCancel(event) {
-    selectEntry(event.target);
+  function selectEntryAndCancel(
+    this: GlobalEventHandlers,
+    event: MouseEvent
+  ): void {
+    selectEntry(event.target as HTMLAnchorElement);
     window.catalogCancel(event);
   }
 
   for (let leftIndex = 0; leftIndex < lefts.length; leftIndex++) {
-    const leftEntries = lefts.item(leftIndex).getElementsByTagName("a");
+    const leftEntries = lefts.item(leftIndex)!.getElementsByTagName("a");
 
     for (
       let leftEntryIndex = 0;
       leftEntryIndex < leftEntries.length;
       leftEntryIndex++
     ) {
-      const leftEntry = leftEntries.item(leftEntryIndex);
+      const leftEntry = leftEntries.item(leftEntryIndex)!;
 
       leftEntry.onclick = window.catalogCancel;
       leftEntry.onmousedown = selectEntryAndCancel;
-      entries[leftEntry.getAttribute("href")] = leftEntry;
+      entries[leftEntry.getAttribute("href")!] = leftEntry;
     }
   }
 
   searchBar.placeholder = SEARCH_BAR_PLACEHOLDER;
-  document.getElementsByTagName("main").item(0).appendChild(searchBar);
+  document.getElementsByTagName("main").item(0)!.appendChild(searchBar);
 
-  document.onkeydown = function (event) {
+  document.onkeydown = function (event: KeyboardEvent): void {
     switch (event.key) {
       case "/":
         searchBar.focus();
@@ -253,9 +255,9 @@ function initializeSearch() {
                   window.catalogActiveEntries[
                     window.catalogActiveEntries.length - 1
                   ]
-                    .getAttribute("href")
+                    .getAttribute("href")!
                     .slice(1)
-                )
+                )!
                 .getElementsByClassName("left")
                 .item(0)
             : rootLeft;
@@ -266,7 +268,7 @@ function initializeSearch() {
             leftChildIndex < left.children.length;
             leftChildIndex++
           ) {
-            const leftChild = left.children.item(leftChildIndex);
+            const leftChild = left.children.item(leftChildIndex)!;
 
             if (!hasClass(leftChild, UNMATCHED_CLASS)) {
               selectEntry(leftChild);
@@ -294,9 +296,9 @@ function initializeSearch() {
     }
   };
 
-  document.ontouchstart = function () {};
+  document.ontouchstart = function (): void {};
 
-  searchBar.onkeydown = function (event) {
+  searchBar.onkeydown = function (event: KeyboardEvent): void {
     switch (event.key) {
       case "/":
       case "ArrowDown":
@@ -316,12 +318,12 @@ function initializeSearch() {
     }
   };
 
-  searchBar.onkeyup = function () {
+  searchBar.onkeyup = function (): void {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(search, SEARCH_TIMEOUT);
   };
 
-  window.onhashchange = function (event) {
+  window.onhashchange = function (event: HashChangeEvent): void {
     if (window.location.hash.length <= 2) {
       clearActiveEntries();
     } else if (!hasClass(entries[window.location.hash], "active")) {
@@ -334,7 +336,11 @@ function initializeSearch() {
   window.onhashchange(document.createEvent("HashChangeEvent"));
 }
 
-function toggleClass(element, className, value) {
+function toggleClass(
+  element: Element,
+  className: string,
+  value: boolean
+): void {
   element.className = element.className.replace(classRegExp(className), "");
 
   if (value) {
