@@ -1,1 +1,9 @@
+bar.png:src/bar.xcf
+catalog-edit.js:src/catalog-edit.ts
+catalog-edit.js:src/index.d.ts
 catalog.css:src/catalog.css
+catalog.js:src/catalog.ts
+catalog.js:src/index.d.ts
+!src/catalog.xml
+!src/classes/*
+!src/templates/*

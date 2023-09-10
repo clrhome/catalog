@@ -2,6 +2,5 @@
 .git-ftp-ignore
 .git-ftp-include
 .gitignore
-.gitmodules
 Makefile
-src/catalog.css
+src/*
