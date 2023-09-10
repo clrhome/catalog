@@ -95,25 +95,26 @@ function initializeSearch() {
             toggleClass(partialEntry, "active", true);
             window.catalogActiveEntries.push(partialEntry);
         }
-        var dts = document
-            .getElementById(href.slice(1))
-            .getElementsByTagName("dt");
-        if (dts.length !== 0) {
-            var request_1 = new XMLHttpRequest();
-            request_1.onload = function (event) {
-                var response = JSON.parse(request_1.response);
-                for (var dtIndex = 0; dtIndex < dts.length; dtIndex++) {
-                    var dt = dts.item(dtIndex);
-                    var key = dt.innerHTML.toLowerCase();
-                    if (key in response && dt.nextElementSibling != null) {
-                        dt.nextElementSibling.innerHTML = response[key];
+        var target = document.getElementById(href.slice(1));
+        if (target.getElementsByClassName("left").length === 0) {
+            var dts_1 = target.getElementsByTagName("dt");
+            if (dts_1.length !== 0) {
+                var request_1 = new XMLHttpRequest();
+                request_1.onload = function (event) {
+                    var response = JSON.parse(request_1.response);
+                    for (var dtIndex = 0; dtIndex < dts_1.length; dtIndex++) {
+                        var dt = dts_1.item(dtIndex);
+                        var key = dt.innerHTML.toLowerCase();
+                        if (key in response && dt.nextElementSibling != null) {
+                            dt.nextElementSibling.innerHTML = response[key];
+                        }
                     }
-                }
-            };
-            request_1.open("GET", window.catalogTokenUrl(href) +
-                "?alt=json&html=1&v=" +
-                new Date().getTime(), true);
-            request_1.send();
+                };
+                request_1.open("GET", window.catalogTokenUrl(href) +
+                    "?alt=json&html=1&v=" +
+                    new Date().getTime(), true);
+                request_1.send();
+            }
         }
         window.location.href = href;
     }

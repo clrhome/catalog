@@ -9,6 +9,12 @@ final class Catalog {
   const LOG_FILE = __DIR__ . '/../../log.yaml';
   const NAMESPACES =
       array('axe' => 'axe', 'basic' => null, 'grammer' => 'grammer');
+  const OFFSET_CONTENT = 7;
+  const OFFSET_LANGUAGE = 3;
+  const OFFSET_SUBTAG = 4;
+  const OFFSET_TAG = 1;
+  const PATTERN_FIELD =
+      '/<(((\w+):)?(syntax|description|keys|size|time)(-\w)*)(>(.*?)<\/\1| ?\/)>/';
 
   private \DOMDocument $catalog;
   private string $language;
@@ -156,11 +162,7 @@ final class Catalog {
     return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" . str_replace(
       '/>',
       "$space/>",
-      preg_replace(
-        '/<(token[^>]*)>\s*<\/token>/',
-        "<$1/>",
-        $this->toHeadlessXml($first_byte, $second_byte, $pretty, $html)
-      )
+      $this->toHeadlessXml($first_byte, $second_byte, $pretty, $html)
     );
   }
 
@@ -216,35 +218,28 @@ final class Catalog {
       );
     }
 
-    $headless_xml = $this->catalog->saveXML($node);
-
-    if ($this->language === self::LANGUAGE_BASIC) {
-      $headless_xml = preg_replace(
-        '/<([-\w]+:[-\w]+)(>.*?<\/\1| ?\/)>/',
-        '',
-        $headless_xml
-      );
-    } else {
-      $headless_xml = preg_replace_callback(
-        '/<(([-\w]+:)?(syntax|description)(-\w)*)(>.*?<\/\1| ?\/)>/',
-        function($match) {
-          return $match[2] === $this->language . ':' ? $match[0] : '';
-        },
-        $headless_xml
-      );
-    }
-
-    $headless_xml = preg_replace('/^\s*\n/m', '', $headless_xml);
-
-    return $html ? preg_replace_callback(
-      '/<(([-\w]+:)?[-\w]+)>(.*?)<\/\1>/',
-      function($match) {
-        return "<$match[1]>" .
-            CatalogTokenField::formatValue($match[1], $match[3]) .
-            "</$match[1]>";
+    return preg_replace('/^\s*\n/m', '', preg_replace_callback(
+      self::PATTERN_FIELD,
+      function($match) use ($html) {
+        return $match[self::OFFSET_LANGUAGE] === '' && (
+          $this->language === self::LANGUAGE_BASIC ||
+          $match[self::OFFSET_SUBTAG] === CatalogTokenField::FIELD_KEYS
+        ) || $match[self::OFFSET_LANGUAGE] === $this->language
+          ? $html
+            ? sprintf(
+              '<%s>%s</%s>',
+              $match[self::OFFSET_TAG],
+              CatalogTokenField::formatValue(
+                $match[self::OFFSET_TAG],
+                @$match[self::OFFSET_CONTENT] ?? ''
+              ),
+              $match[self::OFFSET_TAG]
+            )
+            : $match[0]
+          : '';
       },
-      $headless_xml
-    ) : $headless_xml;
+      $this->catalog->saveXML($node)
+    ));
   }
 }
 

@@ -152,35 +152,37 @@ function initializeSearch(): void {
       window.catalogActiveEntries.push(partialEntry);
     }
 
-    const dts = document
-      .getElementById(href.slice(1))!
-      .getElementsByTagName("dt");
+    const target = document.getElementById(href.slice(1))!;
 
-    if (dts.length !== 0) {
-      const request = new XMLHttpRequest();
+    if (target.getElementsByClassName("left").length === 0) {
+      const dts = target.getElementsByTagName("dt");
 
-      request.onload = function (event: Event) {
-        const response = JSON.parse(request.response);
+      if (dts.length !== 0) {
+        const request = new XMLHttpRequest();
 
-        for (let dtIndex = 0; dtIndex < dts.length; dtIndex++) {
-          const dt = dts.item(dtIndex)!;
-          const key = dt.innerHTML.toLowerCase();
+        request.onload = function (event: Event) {
+          const response = JSON.parse(request.response);
 
-          if (key in response && dt.nextElementSibling != null) {
-            dt.nextElementSibling.innerHTML = response[key];
+          for (let dtIndex = 0; dtIndex < dts.length; dtIndex++) {
+            const dt = dts.item(dtIndex)!;
+            const key = dt.innerHTML.toLowerCase();
+
+            if (key in response && dt.nextElementSibling != null) {
+              dt.nextElementSibling.innerHTML = response[key];
+            }
           }
-        }
-      };
+        };
 
-      request.open(
-        "GET",
-        window.catalogTokenUrl(href) +
-          "?alt=json&html=1&v=" +
-          new Date().getTime(),
-        true
-      );
+        request.open(
+          "GET",
+          window.catalogTokenUrl(href) +
+            "?alt=json&html=1&v=" +
+            new Date().getTime(),
+          true
+        );
 
-      request.send();
+        request.send();
+      }
     }
 
     window.location.href = href;

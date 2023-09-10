@@ -56,13 +56,17 @@ final class CatalogToken {
     foreach ($node->childNodes as $field_node) {
       if (
         $field_node->namespaceURI === $namespace ||
-            $field_node === CatalogTokenField::FIELD_KEYS
+            $field_node->nodeName === CatalogTokenField::FIELD_KEYS
       ) {
         array_push($this->fields, new CatalogTokenField(
           $field_node->localName,
           $field_node->nodeValue
         ));
       }
+    }
+
+    if (count($this->fields) === 1) {
+      $this->idSafe = '';
     }
   }
 
@@ -98,16 +102,20 @@ final class CatalogTable {
 
       switch ($element_node->nodeName) {
         case 'table':
-          array_push(
-            $this->elements,
-            new CatalogTable($bytes, $namespace, $element_node)
-          );
+          $subtable = new CatalogTable($bytes, $namespace, $element_node);
+
+          if (count($subtable->elements) !== 0) {
+            array_push($this->elements, $subtable);
+          }
 
           break;
         case 'token':
           $token = new CatalogToken($bytes, $namespace, $element_node);
 
-          array_push($this->elements, $token);
+          if ($token->idSafe !== '') {
+            array_push($this->elements, $token);
+          }
+
           break;
         default:
           throw new \UnexpectedValueException(sprintf(

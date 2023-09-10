@@ -5,11 +5,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link href="https://clrhome.org/logo.css" type="text/css" rel="stylesheet" />
-    <link href="catalog.css?v={$date}" type="text/css" rel="stylesheet" />
+    <link href="{if $language neq 'basic'}../{/if}catalog.css?v={$date}" type="text/css" rel="stylesheet" />
     <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-JGMW6RW2WE"></script>
     <script src="/bin/js/ga.js?v={$date}"></script>
-    <script src="catalog.js?v={$date}"></script>
-{if $editable}    <script type="text/javascript" src="catalog-edit.js?v={$date}"></script>
+    <script src="{if $language neq 'basic'}../{/if}catalog.js?v={$date}"></script>
+{if $editable}    <script type="text/javascript" src="{if $language neq 'basic'}../{/if}catalog-edit.js?v={$date}"></script>
 {/if}  </head>
   <body>
     <header>

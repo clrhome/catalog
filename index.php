@@ -4,7 +4,7 @@ namespace ClrHome;
 include(__DIR__ . '/../lib/cleverly/Cleverly.class.php');
 include(__DIR__ . '/src/classes/Catalog.class.php');
 
-$language = @$_GET['lang'] ?: 'basic';
+$language = @$_GET['lang'] ?: Catalog::LANGUAGE_BASIC;
 $catalog = new Catalog($language);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -67,8 +67,8 @@ $cleverly->setTemplateDir(__DIR__ . '/src/templates');
 $cleverly->display('index.tpl', [
   'date' => strftime('%F'),
   'editable' => true,
+  'element' => $catalog->toTable(),
   'emptyMessage' => CatalogTokenField::EMPTY_MESSAGE,
-  'language' => $language,
-  'element' => $catalog->toTable()
+  'language' => $language
 ]);
 ?>
