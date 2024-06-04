@@ -1,4 +1,4 @@
-<?
+<?php
 namespace ClrHome;
 
 include(__DIR__ . '/../lib/cleverly/Cleverly.class.php');
